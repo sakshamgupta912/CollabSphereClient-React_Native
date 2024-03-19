@@ -15,27 +15,21 @@ import { DrawerContentScrollView, DrawerItem } from '@react-navigation/drawer'
 import { MaterialCommunityIcons } from '@expo/vector-icons'
 import { CustomDrawer } from '../components/CustomDrawer'
 
+import {theme} from '../core/theme'
+
+import Home from './DashboardScreens/HomeScreen'
+import AssignmentScreen from './DashboardScreens/AssignmentScreen'
+import HomeScreen from './DashboardScreens/HomeScreen'
+import { Header } from '@react-navigation/stack'
+
 const Drawer = createDrawerNavigator()
 
-function HomeScreen() {
-  return (
-    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-      <Text>Home Screen</Text>
-    </View>
-  )
-}
 
-function AssignmentScreen() {
-  return (
-    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-      <Text>AssignmentScreen Screen</Text>
-    </View>
-  )
-}
 
 export default function Dashboard({navigation}) {
   return (
-    <Drawer.Navigator drawerContent={(props) => <CustomDrawer mainNavigation={navigation} {...props} />}>
+    <Drawer.Navigator  drawerContent={(props) => <CustomDrawer mainNavigation={navigation} {...props} />}
+    screenOptions={{drawerActiveBackgroundColor:theme.colors.primary, drawerActiveTintColor:'#fff'}}>
       <Drawer.Screen
         name="Home"
         component={HomeScreen}

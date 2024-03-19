@@ -29,26 +29,25 @@ export const CustomDrawer = ({ mainNavigation, ...props }) => {
           <Title style={styles.title}>Dawid Urbaniak</Title>
         </View>
         <PaperDrawer.Section style={styles.drawerSection}>
-          <DrawerItemList {...props} />
+          <DrawerItemList
+            {...props}
+            activeTintColor="red" // Set the active item color
+            inactiveTintColor="blue" // Set the inactive item color
+          />
         </PaperDrawer.Section>
         <PaperDrawer.Section>
           <DrawerItem
             icon={({ color, size }) => (
-              <MaterialCommunityIcons
-                name="account-outline"
-                color={color}
-                size={size}
-              />
+              <MaterialCommunityIcons name="logout" color={color} size={size} />
             )}
             label="Logout"
             onPress={() =>
-                mainNavigation.reset({
+              mainNavigation.reset({
                 index: 0,
                 routes: [{ name: 'StartScreen' }],
               })
             }
           />
-        
         </PaperDrawer.Section>
       </View>
     </DrawerContentScrollView>
