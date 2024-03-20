@@ -22,11 +22,18 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#FFFFFF"
-      }
+        "backgroundColor": "#FFFFFF",
+        "usesCleartextTraffic": true
+      },
+      "package": "com.collabsphere"
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "58a6a9bb-520d-4f27-b92a-2a8b4bcacff8"
+      }
     }
   }
 }

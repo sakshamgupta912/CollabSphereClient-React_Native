@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { TouchableOpacity, StyleSheet, View } from 'react-native'
 import { Text } from 'react-native-paper'
 import Background from '../components/Background'
@@ -11,23 +11,97 @@ import BackButton from '../components/BackButton'
 import { theme } from '../core/theme'
 import { emailValidator } from '../helpers/emailValidator'
 import { passwordValidator } from '../helpers/passwordValidator'
+import AsyncStorage from '@react-native-async-storage/async-storage'; // Import AsyncStorage
+
+import axios from '../api/axios'
 
 export default function LoginScreen({ navigation }) {
+  const [error, setError] = useState(null); // Server Error Changed to null to indicate no error initially
   const [email, setEmail] = useState({ value: '', error: '' })
   const [password, setPassword] = useState({ value: '', error: '' })
 
-  const onLoginPressed = () => {
+  useEffect(() => {
+    // Check AsyncStorage for existing token and user ID
+    checkUserAuthentication();
+  }, []);
+
+  const checkUserAuthentication = async () => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      const uid = await AsyncStorage.getItem('uid');
+      
+      // If token and uid exist, navigate to Dashboard
+      if (token && uid) {
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'Dashboard' }],
+        });
+      }
+    } catch (error) {
+      console.error('Error reading data from AsyncStorage:', error.message);
+    }
+  };
+
+
+  const onLoginPressed = async () => {
     const emailError = emailValidator(email.value)
     const passwordError = passwordValidator(password.value)
     if (emailError || passwordError) {
-      setEmail({ ...email, error: emailError })
-      setPassword({ ...password, error: passwordError })
-      return
+      setEmail({...email, error: emailError })
+      setPassword({...password, error: passwordError })
+      return ;
     }
-    navigation.reset({
-      index: 0,
-      routes: [{ name: 'Dashboard' }],
-    })
+    try {
+      const formData = {
+        email: email.value,
+        password: password.value
+      };
+  
+      const response = await axios.post(
+        'http://10.24.81.59:3000/api/auth/login',
+        formData,
+        {
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+     
+      // Handle response status
+      if (response.status === 200) {
+        // Navigate to Dashboard upon successful login
+        const { _id, name, email ,avatar, token } = response.data.user;
+        // Store user data in AsyncStorage
+     
+        await AsyncStorage.setItem('uid', _id);
+        await AsyncStorage.setItem('token', token);
+        await AsyncStorage.setItem('email', email);
+        await AsyncStorage.setItem('name', name);
+        await AsyncStorage.setItem('avatar', avatar);
+
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'Dashboard' }],
+        });
+      } 
+
+    } catch (error) {
+      // Handle network errors or other errors
+      console.log(error.response.status);
+      if (error.response.status === 401){
+        setError('Invalid email or password');
+      }
+      else if(error.response.status === 404){
+        setError('User not found');
+      }
+      else{
+        setError('Something went wrong. Please try again.');
+      }
+      
+    }
+
+
+    
   }
 
   return (
@@ -63,6 +137,7 @@ export default function LoginScreen({ navigation }) {
           <Text style={styles.forgot}>Forgot your password?</Text>
         </TouchableOpacity>
       </View>
+      {error ? <Text style={styles.error}>{error}</Text> : null}
       <Button
         labelStyle={{ color: '#ffffff' }}
         mode="contained"

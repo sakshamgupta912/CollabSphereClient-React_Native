@@ -14,8 +14,30 @@ import {
 import { DrawerContentScrollView, DrawerItem } from '@react-navigation/drawer'
 import { MaterialCommunityIcons } from '@expo/vector-icons'
 import Button from './Button'
+import AsyncStorage from '@react-native-async-storage/async-storage' // Import AsyncStorage
+
 
 export const CustomDrawer = ({ mainNavigation, ...props }) => {
+  const logout = async () => {
+    try {
+      // Remove user data from AsyncStorage
+      await AsyncStorage.removeItem('uid');
+      await AsyncStorage.removeItem('token');
+      await AsyncStorage.removeItem('email');
+      await AsyncStorage.removeItem('name');
+      await AsyncStorage.removeItem('avatar');
+  
+      // Navigate to the login screen
+      mainNavigation.reset({
+        index: 0,
+        routes: [{ name: 'StartScreen' }],
+      });
+    } catch (error) {
+      console.error('Error while logging out:', error.message);
+    }
+  };
+  
+  
   return (
     <DrawerContentScrollView>
       <View style={styles.drawerContent}>
@@ -41,12 +63,7 @@ export const CustomDrawer = ({ mainNavigation, ...props }) => {
               <MaterialCommunityIcons name="logout" color={color} size={size} />
             )}
             label="Logout"
-            onPress={() =>
-              mainNavigation.reset({
-                index: 0,
-                routes: [{ name: 'StartScreen' }],
-              })
-            }
+            onPress={logout}
           />
         </PaperDrawer.Section>
       </View>
