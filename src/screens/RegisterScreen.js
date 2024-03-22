@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { View, StyleSheet, TouchableOpacity } from 'react-native'
+import { View, StyleSheet, TouchableOpacity, Image, Alert } from 'react-native'
 import { Text } from 'react-native-paper'
 import Background from '../components/Background'
 import Logo from '../components/Logo'
@@ -11,32 +11,78 @@ import { theme } from '../core/theme'
 import { emailValidator } from '../helpers/emailValidator'
 import { passwordValidator } from '../helpers/passwordValidator'
 import { nameValidator } from '../helpers/nameValidator'
+import { confirmPasswordValidator } from '../helpers/confirmPasswordValidator'
+
+import api from '../api/axios'
 
 export default function RegisterScreen({ navigation }) {
   const [name, setName] = useState({ value: '', error: '' })
   const [email, setEmail] = useState({ value: '', error: '' })
   const [password, setPassword] = useState({ value: '', error: '' })
+  const [confirmPassword, setConfirmPassword] = useState({
+    value: '',
+    error: '',
+  })
 
-  const onSignUpPressed = () => {
+  const onSignUpPressed = async () => {
     const nameError = nameValidator(name.value)
     const emailError = emailValidator(email.value)
     const passwordError = passwordValidator(password.value)
-    if (emailError || passwordError || nameError) {
+    const confirmPasswordError = confirmPasswordValidator(
+      password.value,
+      confirmPassword.value
+    )
+
+    if (emailError || passwordError || nameError || confirmPasswordError) {
       setName({ ...name, error: nameError })
       setEmail({ ...email, error: emailError })
       setPassword({ ...password, error: passwordError })
+      setConfirmPassword({ ...confirmPassword, error: confirmPasswordError })
       return
     }
-    navigation.reset({
-      index: 0,
-      routes: [{ name: 'Dashboard' }],
-    })
+
+    // Check if password and confirm password match
+    if (password.value !== confirmPassword.value) {
+      setConfirmPassword({ ...confirmPassword, error: "Passwords don't match" })
+      return
+    }
+
+    try {
+     
+      const response = await api.post(
+        "/api/auth/register",
+        JSON.stringify({
+          name: name.value,
+          email: email.value,
+          password: password.value,
+        }),
+        {
+          headers: { "Content-Type": "application/json" },
+          withCredentials: true,
+          validateStatus: () => true,
+        }
+      );
+      console.log(response.status);
+      // Handle response based on status
+      if (response.status === 200) {
+        // Registration successful
+        Alert.alert('Success','Registation Success')
+        navigation.navigate('LoginScreen')
+      }
+    } catch (error) {
+      console.error('Error registering:', error)
+      Alert.alert('Error', 'Registration failed. Please try again.')
+    }
+    // Handle error
   }
 
   return (
     <Background>
       <BackButton goBack={navigation.goBack} />
-      <Logo />
+      <Image
+        source={require('../assets/logo.png')}
+        style={{ width: 300, height: 150 }}
+      />
       <Header>Create Account</Header>
       <TextInput
         label="Name"
@@ -60,11 +106,20 @@ export default function RegisterScreen({ navigation }) {
       />
       <TextInput
         label="Password"
-        returnKeyType="done"
+        returnKeyType="next"
         value={password.value}
         onChangeText={(text) => setPassword({ value: text, error: '' })}
         error={!!password.error}
         errorText={password.error}
+        secureTextEntry
+      />
+      <TextInput
+        label="Confirm Password"
+        returnKeyType="done"
+        value={confirmPassword.value}
+        onChangeText={(text) => setConfirmPassword({ value: text, error: '' })}
+        error={!!confirmPassword.error}
+        errorText={confirmPassword.error}
         secureTextEntry
       />
       <Button

@@ -13,7 +13,7 @@ import { emailValidator } from '../helpers/emailValidator'
 import { passwordValidator } from '../helpers/passwordValidator'
 import AsyncStorage from '@react-native-async-storage/async-storage'; // Import AsyncStorage
 
-import axios from '../api/axios'
+import api from '../api/axios'
 
 export default function LoginScreen({ navigation }) {
   const [error, setError] = useState(null); // Server Error Changed to null to indicate no error initially
@@ -56,16 +56,13 @@ export default function LoginScreen({ navigation }) {
         email: email.value,
         password: password.value
       };
-  
-      const response = await axios.post(
-        'http://10.24.81.59:3000/api/auth/login',
-        formData,
-        {
-          headers: {
-            'Content-Type': 'application/json'
-          }
+      const response = await api.post('/api/auth/login', formData,
+      {
+        headers: {
+          'Content-Type': 'application/json'
         }
-      );
+      });
+      
      
       // Handle response status
       if (response.status === 200) {
