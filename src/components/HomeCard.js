@@ -43,7 +43,7 @@ const styles = StyleSheet.create({
   touchable: {
     marginHorizontal:10,
     marginVertical:5,
-    borderRadius: 5, 
+    borderRadius: 5 
   },
 });
 
