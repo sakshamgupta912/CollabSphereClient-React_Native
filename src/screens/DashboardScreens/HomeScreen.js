@@ -71,6 +71,7 @@ const HomeScreen = () => {
           )
           if (response.status === 200) {
             // Handle success - maybe navigate to another screen
+
             closeCreateRoomBottomSheet()
             setCreatedRoomName('')
             getTeams()
@@ -157,6 +158,7 @@ const HomeScreen = () => {
           )
           if (response.status === 200) {
             // Handle success - maybe navigate to another screen
+           
             closeEnterRoomBottomSheet()
             setEnterRoomName('')
             getTeams()
@@ -207,6 +209,7 @@ const HomeScreen = () => {
     try {
       const t = await AsyncStorage.getItem('token')
       const u = await AsyncStorage.getItem('uid')
+    
       setToken(t)
       setUID(u)
     } catch (e) {
@@ -256,7 +259,7 @@ const HomeScreen = () => {
   return (
     <BottomSheetModalProvider>
       <View style={styles.container}>
-        <ScrollView
+        <ScrollView 
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
@@ -303,7 +306,7 @@ const HomeScreen = () => {
         {/* Enter Bottom Sheet */}
         <BottomSheetModal
           style={styles.bottomSheet}
-          backgroundStyle={{ borderRadius: 40 }}
+          backgroundStyle={{ borderRadius: 40 ,backgroundColor: '#f0f0f0' }}
           ref={EnterRoomSheetModalRef}
           index={0}
           snapPoints={snapPoints}
