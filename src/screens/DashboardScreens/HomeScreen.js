@@ -23,7 +23,6 @@ const HomeScreen = () => {
   const [uid, setUID] = useState()
   const [refreshing, setRefreshing] = useState(false) // Manage refreshing state
 
-
   const CreateRoomBottomSheetModalRef = useRef(null)
   const EnterRoomSheetModalRef = useRef(null)
   const snapPoints = ['48%']
@@ -118,6 +117,92 @@ const HomeScreen = () => {
     )
   }
 
+  function hasWhiteSpace(s) {
+    return /\s/g.test(s)
+  }
+  const EnterRoomSheet = () => {
+    const [enterRoomName, setEnterRoomName] = useState({
+      value: '',
+      error: '',
+    })
+    const handleEnterRoom = async () => {
+      try {
+        if (enterRoomName.value.length === 0) {
+          setEnterRoomName((prevState) => ({
+            ...prevState,
+            error: 'Room name should not be empty!',
+          }))
+        } else if (enterRoomName.value.length !== 6) {
+          setEnterRoomName((prevState) => ({
+            ...prevState,
+            error: 'Code should be 6 character long!',
+          }))
+        } else if (hasWhiteSpace(enterRoomName.value.length)) {
+          setEnterRoomName((prevState) => ({
+            ...prevState,
+            error: 'Code should not contain spaces!',
+          }))
+        } else {
+          const response = await axios.post(
+            '/api/teams/joinTeam',
+            JSON.stringify({ code: enterRoomName.value }),
+            {
+              headers: {
+                'Content-Type': 'application/json',
+                authorization: `Bearer ${token}`,
+                uid: uid,
+              },
+              withCredentials: true,
+            }
+          )
+          if (response.status === 200) {
+            // Handle success - maybe navigate to another screen
+            closeEnterRoomBottomSheet()
+            setEnterRoomName('')
+            getTeams()
+            console.log('Room Entered') // Clear error
+            // Optionally, you can navigate to another screen here
+          }
+        }
+      } catch (error) {
+        setEnterRoomName((prevState) => ({
+          ...prevState,
+          error: 'Error entering room: ' + error.message,
+        }))
+
+        // Handle error, maybe set error state to display to the user
+      }
+    }
+
+    return (
+      <View style={styles.createRoomBottomSheet}>
+        <Title> Enter Room </Title>
+        <TextInput
+          label="Enter Room Name"
+          returnKeyType="next"
+          value={enterRoomName.value}
+          onChangeText={(text) =>
+            setEnterRoomName((prevState) => ({
+              ...prevState,
+              value: text,
+              error: '',
+            }))
+          }
+          error={!!enterRoomName.error}
+          errorText={enterRoomName.error}
+        />
+
+        <Button
+          labelStyle={{ color: '#ffffff' }}
+          mode="contained"
+          onPress={handleEnterRoom}
+        >
+          Enter Room
+        </Button>
+      </View>
+    )
+  }
+
   async function auth() {
     try {
       const t = await AsyncStorage.getItem('token')
@@ -160,8 +245,6 @@ const HomeScreen = () => {
   useEffect(() => {
     getTeams()
   }, [uid, token])
-
- 
 
   // Function to handle pull-to-refresh
   const onRefresh = () => {
@@ -209,7 +292,7 @@ const HomeScreen = () => {
         {/* Add Plus Bottom Sheet */}
         <BottomSheetModal
           style={styles.bottomSheet}
-          backgroundStyle={{ borderRadius: 40 ,backgroundColor:'#f0f0f0'}}
+          backgroundStyle={{ borderRadius: 40, backgroundColor: '#f0f0f0' }}
           ref={CreateRoomBottomSheetModalRef}
           index={0}
           snapPoints={['48%']}
@@ -225,9 +308,7 @@ const HomeScreen = () => {
           index={0}
           snapPoints={snapPoints}
         >
-          <View>
-            <Text>Hello Enter Bottom Sheet</Text>
-          </View>
+          <EnterRoomSheet />
         </BottomSheetModal>
       </View>
     </BottomSheetModalProvider>
@@ -268,6 +349,11 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
   },
   createRoomBottomSheet: {
+    flex: 1,
+
+    alignItems: 'center',
+  },
+  enterRoomBottomSheet: {
     flex: 1,
 
     alignItems: 'center',
