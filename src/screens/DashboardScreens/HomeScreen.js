@@ -3,36 +3,120 @@ import { useState, useEffect, useRef } from 'react'
 import { View, StyleSheet, TouchableOpacity, Text } from 'react-native'
 import Icon from 'react-native-ico-material-design'
 import HomeCard from '../../components/HomeCard'
-
-import { ScrollView } from 'react-native-gesture-handler'
+import TextInput from '../../components/TextInput'
+import { ScrollView, RefreshControl } from 'react-native-gesture-handler'
 import theme from '../../core/theme'
 import axios from '../../api/axios'
 import AsyncStorage from '@react-native-async-storage/async-storage' // Import AsyncStorage
 import { ActivityIndicator } from 'react-native-paper'
-
+import { Title } from 'react-native-paper'
 import {
   BottomSheetModal,
   BottomSheetModalProvider,
 } from '@gorhom/bottom-sheet'
+import Button from '../../components/Button'
 
 const HomeScreen = () => {
   const [roomCollection, setRoomCollection] = useState(null)
   const [loading, setLoading] = useState(true) // Manage loading state
   const [token, setToken] = useState()
   const [uid, setUID] = useState()
+  const [refreshing, setRefreshing] = useState(false) // Manage refreshing state
 
-  const AddPlusBottomSheetModalRef = useRef(null)
-  const EnterBottomSheetModalRef = useRef(null)
+
+  const CreateRoomBottomSheetModalRef = useRef(null)
+  const EnterRoomSheetModalRef = useRef(null)
   const snapPoints = ['48%']
 
-  const handleAddPlusButtonPress = () => {
-    AddPlusBottomSheetModalRef.current?.present()
+  const handleCreateRoomButtonPress = () => {
+    CreateRoomBottomSheetModalRef.current?.present()
   }
-  const handleEnterButtonPress = () => {
-    EnterBottomSheetModalRef.current?.present()
+  const handleEnterRoomButtonPress = () => {
+    EnterRoomSheetModalRef.current?.present()
   }
 
-  
+  // Add a function to close the Create Room BottomSheetModal
+  const closeCreateRoomBottomSheet = () => {
+    CreateRoomBottomSheetModalRef.current?.close()
+  }
+
+  // Add a function to close the Enter Room BottomSheetModal
+  const closeEnterRoomBottomSheet = () => {
+    EnterRoomSheetModalRef.current?.close()
+  }
+
+  const CreateRoomSheet = () => {
+    const [createdRoomName, setCreatedRoomName] = useState({
+      value: '',
+      error: '',
+    })
+    const handleCreateRoom = async () => {
+      try {
+        if (createdRoomName.value.length === 0) {
+          setCreatedRoomName((prevState) => ({
+            ...prevState,
+            error: 'Room name should not be empty!',
+          }))
+        } else {
+          const response = await axios.post(
+            '/api/teams/createTeams',
+            JSON.stringify({ name: createdRoomName.value }),
+            {
+              headers: {
+                'Content-Type': 'application/json',
+                authorization: `Bearer ${token}`,
+                uid: uid,
+              },
+              withCredentials: true,
+            }
+          )
+          if (response.status === 200) {
+            // Handle success - maybe navigate to another screen
+            closeCreateRoomBottomSheet()
+            setCreatedRoomName('')
+            getTeams()
+            console.log('Room Created') // Clear error
+            // Optionally, you can navigate to another screen here
+          }
+        }
+      } catch (error) {
+        setCreatedRoomName((prevState) => ({
+          ...prevState,
+          error: 'Error creating room: ' + error.message,
+        }))
+
+        // Handle error, maybe set error state to display to the user
+      }
+    }
+
+    return (
+      <View style={styles.createRoomBottomSheet}>
+        <Title> Create Room </Title>
+        <TextInput
+          label="Enter Room Name"
+          returnKeyType="next"
+          value={createdRoomName.value}
+          onChangeText={(text) =>
+            setCreatedRoomName((prevState) => ({
+              ...prevState,
+              value: text,
+              error: '',
+            }))
+          }
+          error={!!createdRoomName.error}
+          errorText={createdRoomName.error}
+        />
+
+        <Button
+          labelStyle={{ color: '#ffffff' }}
+          mode="contained"
+          onPress={handleCreateRoom}
+        >
+          Create Room
+        </Button>
+      </View>
+    )
+  }
 
   async function auth() {
     try {
@@ -45,44 +129,59 @@ const HomeScreen = () => {
     }
   }
 
-  useEffect(() => {
-    async function getTeams() {
-      try {
-        auth()
-        const response = await axios.post(
-          '/api/teams/getTeams',
-          {},
-          {
-            headers: {
-              'Content-Type': 'application/json',
-              authorization: `Bearer ${token}`,
-              uid: uid,
-            },
-            withCredentials: true,
-          }
-        )
-
-        if (response.status === 200) {
-          setRoomCollection(response.data)
-        } else {
-          console.error('Error fetching room data:', response.statusText)
+  async function getTeams() {
+    try {
+      auth()
+      const response = await axios.post(
+        '/api/teams/getTeams',
+        {},
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            authorization: `Bearer ${token}`,
+            uid: uid,
+          },
+          withCredentials: true,
         }
-      } catch (error) {
-        console.error('Error fetching room data:', error)
-      } finally {
-        setLoading(false) // Set loading to false when data fetching is complete
-      }
-    }
+      )
 
+      if (response.status === 200) {
+        setRoomCollection(response.data)
+      } else {
+        console.error('Error fetching room data:', response.statusText)
+      }
+    } catch (error) {
+      console.error('Error fetching room data:', error)
+    } finally {
+      setLoading(false) // Set loading to false when data fetching is complete
+    }
+  }
+
+  useEffect(() => {
     getTeams()
   }, [uid, token])
 
-  console.log(roomCollection)
+ 
+
+  // Function to handle pull-to-refresh
+  const onRefresh = () => {
+    setRefreshing(true) // Set refreshing state to true when pull-to-refresh is triggered
+    getTeams()
+    setRefreshing(false) // Set refreshing state to false when pull-to-refresh is triggered
+  }
 
   return (
     <BottomSheetModalProvider>
       <View style={styles.container}>
-        <ScrollView>
+        <ScrollView
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={[theme.colors.primary]} // Customize the color of the refresh indicator
+            />
+          }
+        >
           {loading ? ( // Render loading indicator while loading
             <ActivityIndicator size="large" color={theme.colors.primary} />
           ) : Array.isArray(roomCollection) && roomCollection.length > 0 ? (
@@ -96,13 +195,13 @@ const HomeScreen = () => {
         {/* Floating button */}
         <TouchableOpacity
           style={styles.createButton}
-          onPress={handleAddPlusButtonPress}
+          onPress={handleCreateRoomButtonPress}
         >
           <Icon name="add-plus-button" size={30} color="#fff" />
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.enterButton}
-          onPress={handleEnterButtonPress}
+          onPress={handleEnterRoomButtonPress}
         >
           <Icon name="exit-to-app-button" size={30} color="#fff" />
         </TouchableOpacity>
@@ -110,21 +209,19 @@ const HomeScreen = () => {
         {/* Add Plus Bottom Sheet */}
         <BottomSheetModal
           style={styles.bottomSheet}
-          backgroundStyle={{ borderRadius: 40 }}
-          ref={AddPlusBottomSheetModalRef}
+          backgroundStyle={{ borderRadius: 40 ,backgroundColor:'#f0f0f0'}}
+          ref={CreateRoomBottomSheetModalRef}
           index={0}
-          snapPoints={snapPoints}
+          snapPoints={['48%']}
         >
-          <View>
-            <Text>Hello Add Plus Bottom Sheet</Text>
-          </View>
+          <CreateRoomSheet />
         </BottomSheetModal>
 
         {/* Enter Bottom Sheet */}
         <BottomSheetModal
           style={styles.bottomSheet}
           backgroundStyle={{ borderRadius: 40 }}
-          ref={EnterBottomSheetModalRef}
+          ref={EnterRoomSheetModalRef}
           index={0}
           snapPoints={snapPoints}
         >
@@ -169,6 +266,11 @@ const styles = StyleSheet.create({
   bottomSheet: {
     paddingHorizontal: 20,
     paddingVertical: 5,
+  },
+  createRoomBottomSheet: {
+    flex: 1,
+
+    alignItems: 'center',
   },
 })
 
