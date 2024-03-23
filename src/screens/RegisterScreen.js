@@ -12,6 +12,7 @@ import { emailValidator } from '../helpers/emailValidator'
 import { passwordValidator } from '../helpers/passwordValidator'
 import { nameValidator } from '../helpers/nameValidator'
 import { confirmPasswordValidator } from '../helpers/confirmPasswordValidator'
+import Icon from 'react-native-ico-material-design';
 
 import api from '../api/axios'
 
