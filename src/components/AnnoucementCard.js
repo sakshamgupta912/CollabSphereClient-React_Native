@@ -1,56 +1,105 @@
-import React from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
-import Icon from 'react-native-ico-material-design';
-import * as FileSystem from 'expo-file-system';
-import * as Sharing from 'expo-sharing';
-import axios from '../api/axios';
+import React,{useState,useEffect} from 'react'
+import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native'
+import Icon from 'react-native-ico-material-design'
+import * as FileSystem from 'expo-file-system'
+import * as Sharing from 'expo-sharing'
+import axios from '../api/axios'
+import theme from '../core/theme'
 
-const AnnoucementCard = ({ post, uid, token }) => {
-    const handleDownload = async (file) => {
-        const fileId = file._id;
-        try {
-          const response = await axios.get(`/api/download/`, {
-            responseType: 'blob',
-            headers: {
-              'Authorization': `Token ${token}`,
-              fileid: fileId,
-            },
-          });
-      
-          if (response.status === 200) {
-            const blobId = response.data.blobId;
-      
-            if (blobId) {
-              const fileName = `file_${blobId}.png`; // Assuming the file is a PDF, adjust the extension as needed
-              const downloadDest = `${FileSystem.documentDirectory}${fileName}`;
-      
-              try {
-                const downloadObject = FileSystem.createDownloadResumable(blobId, downloadDest);
-                const { uri: localUri } = await downloadObject.downloadAsync();
-                console.log('File downloaded successfully:', localUri);
-                await Sharing.shareAsync(localUri);
-              } catch (error) {
-                console.error('Error downloading file:', error);
-              }
-            } else {
-              console.error('Invalid API response: blobId is undefined');
+const AnnoucementCard = ({ post, uid, token ,isAdmin,setUpdate}) => {
+  const [deleteEnable, setDeleteEnable] = useState(false)
+  
+  const handleDelete = async () => {
+    try{
+        const response = await axios.post(
+            `/api/post/deletePost`,
+            JSON.stringify({ postID: post._id }),
+            {
+              headers: {
+                "Content-Type": "application/json",
+                authorization: `Token ${token}`,
+                uid,
+              },
+              validateStatus: () => true
             }
-          } else if (response.status === 304) {
-            console.log('File has not been modified since the last request.');
-            // You can handle the 304 status code here, for example, by showing a message to the user or retrieving the file from cache if available.
-          } else {
-            console.error('Error fetching file from API:', response.status);
+          );
+          setUpdate((prevState)=>(prevState+1));
+
+    }
+    catch(error)
+    {
+        alert('Error in Deletion of chat..');
+        console.error('Error fetching deleting from API:', error)
+    }
+    
+  };
+
+  useEffect(() => {
+    if (uid === post.createdBy._id || isAdmin) {
+      setDeleteEnable(true);
+    }
+  }, []);
+
+  const handleDownload = async (file) => {
+    const fileId = file._id
+    try {
+      const response = await axios.get(`/api/download/`, {
+        responseType: 'blob',
+        headers: {
+          Authorization: `Token ${token}`,
+          fileid: fileId,
+        },
+      })
+
+      if (response.status === 200) {
+        const blobId = response.data.blobId
+
+        if (blobId) {
+          const fileName = `file_${blobId}.png` // Assuming the file is a PDF, adjust the extension as needed
+          const downloadDest = `${FileSystem.documentDirectory}${fileName}`
+
+          try {
+            const downloadObject = FileSystem.createDownloadResumable(
+              blobId,
+              downloadDest
+            )
+            const { uri: localUri } = await downloadObject.downloadAsync()
+            console.log('File downloaded successfully:', localUri)
+            await Sharing.shareAsync(localUri)
+          } catch (error) {
+            console.error('Error downloading file:', error)
           }
-        } catch (error) {
-          console.error('Error fetching file from API:', error);
+        } else {
+          console.error('Invalid API response: blobId is undefined')
         }
-      };
+      } else if (response.status === 304) {
+        console.log('File has not been modified since the last request.')
+        // You can handle the 304 status code here, for example, by showing a message to the user or retrieving the file from cache if available.
+      } else {
+        console.error('Error fetching file from API:', response.status)
+      }
+    } catch (error) {
+      console.error('Error fetching file from API:', error)
+    }
+  }
 
   return (
     <View style={styles.postCard}>
       <View style={styles.postHeader}>
-        <Image source={{ uri: 'https://bootdey.com/img/Content/avatar/avatar2.png' }} style={styles.postAvatar} />
+        <Icon
+          name="round-account-button-with-user-inside"
+          style={styles.postAvatar}
+          height="30"
+          width="30"
+        />
+
+        {/* <Image source={{ uri: 'https://bootdey.com/img/Content/avatar/avatar2.png' }} style={styles.postAvatar} /> */}
         <Text style={styles.postUsername}>{post.createdBy.name}</Text>
+        {deleteEnable && ( // Render dustbin icon only when deleteEnable is true
+          <TouchableOpacity onPress={handleDelete}>
+            <Icon name="rubbish-bin-delete-button" />
+          </TouchableOpacity>
+        )}
       </View>
       <Text style={styles.postDescription}>{post.content}</Text>
       {post.files && post.files.length > 0 && (
@@ -59,7 +108,7 @@ const AnnoucementCard = ({ post, uid, token }) => {
           {post.files.map((file, index) => (
             <TouchableOpacity key={index} onPress={() => handleDownload(file)}>
               <View style={styles.fileItemContainer}>
-                <Icon name="attachment-clip" size={20} color="#000" />
+                <Icon name="attachment-clip" color="#000" />
                 <Text style={styles.fileItem}>{file.originalname}</Text>
               </View>
             </TouchableOpacity>
@@ -67,8 +116,8 @@ const AnnoucementCard = ({ post, uid, token }) => {
         </View>
       )}
     </View>
-  );
-};
+  )
+}
 
 const styles = StyleSheet.create({
   postCard: {
@@ -90,6 +139,7 @@ const styles = StyleSheet.create({
   },
   postUsername: {
     fontSize: 18,
+    fontWeight: '500',
     flex: 1,
   },
   postDescription: {
@@ -109,11 +159,10 @@ const styles = StyleSheet.create({
     marginTop: 5,
   },
   fileItem: {
-    fontSize: 14,
+    fontSize: 18,
     marginLeft: 5,
-    textDecorationLine: 'underline',
-    color: 'blue',
+    color: theme.colors.primary,
   },
-});
+})
 
-export default AnnoucementCard;
+export default AnnoucementCard
