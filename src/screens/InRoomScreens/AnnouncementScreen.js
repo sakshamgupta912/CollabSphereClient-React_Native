@@ -1,18 +1,139 @@
-import React, { useEffect, useState } from 'react'
-import { View, StyleSheet, ScrollView, RefreshControl } from 'react-native'
+import React, { useEffect, useState, useRef } from 'react'
+import {
+  View,
+  StyleSheet,
+  ScrollView,
+  Text,
+  RefreshControl,
+} from 'react-native'
+import Button from '../../components/Button'
+import TextInput from '../../components/TextInput'
 import AnnoucementCard from '../../components/AnnoucementCard'
 import { ActivityIndicator } from 'react-native-paper'
 import theme from '../../core/theme'
 import axios from '../../api/axios'
 import { TouchableOpacity } from 'react-native'
 import Icon from 'react-native-ico-material-design'
-
+import {
+  BottomSheetModal,
+  BottomSheetModalProvider,
+} from '@gorhom/bottom-sheet'
+import * as DocumentPicker from 'expo-document-picker'
 
 const AnnouncementScreen = (props) => {
+  const nanoid = () => {
+    // Generate a random number
+    const randomNumber = Math.floor(Math.random() * 1000000)
+    // Get the current timestamp
+    const timestamp = Date.now()
+    // Concatenate the timestamp and random number to create the ID
+    const uniqueId = `${timestamp}-${randomNumber}`
+    return uniqueId
+  }
+
   const uid = props.route.params.uid
   const token = props.route.params.token
   const roomCode = props.route.params.roomCode
   const roomId = props.route.params.roomId
+
+  const CreateAnnounceButtonSheetModalRef = useRef(null)
+  const snapPoints = ['48%']
+  const handleAnnounceButtonPress = () => {
+    CreateAnnounceButtonSheetModalRef.current?.present()
+  }
+  const closeCreateAnnounceButtonSheet = () => {
+    CreateAnnounceButtonSheetModalRef.current?.close()
+  }
+
+  const AnnounceButtonSheet = () => {
+    const [file, setFile] = useState([])
+    const [annoucementMessage, setAnnoucementMessage] = useState({
+      value: '',
+      error: '',
+    })
+
+    const pickSomething = async () => {
+      try {
+        const docRes = await DocumentPicker.getDocumentAsync();
+        setFile(docRes)
+        console.log(docRes)
+       
+      } catch (error) {
+        console.log("Error while selecting file: ", error);
+      }
+    };
+    
+    const handleAnnoucement = async () => {
+      try {
+        if (
+          !annoucementMessage.value ||
+          annoucementMessage.value.length === 0
+        ) {
+          setAnnoucementMessage((prev) => ({
+            ...prev,
+            error: 'Message should not be empty!',
+          }))
+        } else {
+          console.log('InsideFile:', file)
+          const response = await axios.post(
+            '/api/post/createPost',
+            {
+              teamID: roomId,
+              content: annoucementMessage.value,
+              files: file,
+            },
+            {
+              headers: {
+                authorization: `Token ${token}`,
+                uid: uid,
+                uploadid: nanoid(),
+              },
+            }
+          )
+
+          if (response.status === 200) {
+            setAnnoucementMessage({ value: '', error: '' })
+            setFile(null)
+            closeCreateAnnounceButtonSheet()
+            setUpdate(update + 1)
+          }
+        }
+      } catch (error) {
+        console.log(error)
+      }
+    }
+
+    return (
+      <View>
+        <TextInput
+          multiline={true}
+          label="Annoucement Message"
+          returnKeyType="next"
+          value={annoucementMessage.value}
+          onChangeText={(text) =>
+            setAnnoucementMessage({ value: text, error: '' })
+          }
+          error={!!annoucementMessage.error}
+          errorText={annoucementMessage.error}
+        />
+
+        <Button
+          labelStyle={{ color: '#ffffff' }}
+          mode="contained"
+          onPress={pickSomething}
+        >
+          Select Files
+        </Button>
+        <Button
+          labelStyle={{ color: '#ffffff' }}
+          mode="contained"
+          onPress={handleAnnoucement}
+        >
+          Make Annoucement
+        </Button>
+      </View>
+    )
+  }
 
   const [AnnouncementContent, setAnnouncementContent] = useState([])
   const [isAdmin, setIsAdmin] = useState(false)
@@ -53,7 +174,6 @@ const AnnouncementScreen = (props) => {
 
     if (response.status === 200) {
       setPosts(response.data.teamPosts)
-      console.log(response.data.teamPosts)
       setIsAdmin(response.data.isAdmin)
       setAnnouncementContent(response.data.teamPosts)
     }
@@ -71,35 +191,52 @@ const AnnouncementScreen = (props) => {
   }
 
   return (
-    <View style={styles.container}>
-      <ScrollView
-        contentContainerStyle={styles.postListContainer}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={handleRefresh}
-            colors={[theme.colors.primary]} // Customize the color of the refresh indicator
-          />
-        }
-      >
-        {posts.map((post) => (
-          <AnnoucementCard
-            key={post._id.toString()}
-            post={post}
-            uid={uid}
-            token={token}
-            isAdmin={isAdmin}
-            setUpdate={setUpdate}
-          />
-        ))}
-      </ScrollView>
-      <TouchableOpacity
-        style={styles.AnnounceButton}
-        // onPress={handleCreateRoomButtonPress}
-      >
-        <Icon name="add-plus-button" size={30} color="#fff" />
-      </TouchableOpacity>
-    </View>
+    <BottomSheetModalProvider>
+      <View style={styles.container}>
+        <ScrollView
+          contentContainerStyle={styles.postListContainer}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+              colors={[theme.colors.primary]} // Customize the color of the refresh indicator
+            />
+          }
+        >
+          {posts.map((post) => (
+            <AnnoucementCard
+              key={post._id.toString()}
+              post={post}
+              uid={uid}
+              token={token}
+              isAdmin={isAdmin}
+              setUpdate={setUpdate}
+            />
+          ))}
+        </ScrollView>
+        <TouchableOpacity
+          style={styles.AnnounceButton}
+          onPress={handleAnnounceButtonPress}
+        >
+          <Icon name="rounded-add-button" height={40} width={40} color="#fff" />
+        </TouchableOpacity>
+        {/* Add Plus Bottom Sheet */}
+        <BottomSheetModal
+          style={styles.bottomSheet}
+          backgroundStyle={{
+            borderRadius: 40,
+            backgroundColor: theme.colors.tertiary,
+          }}
+          ref={CreateAnnounceButtonSheetModalRef}
+          index={0}
+          snapPoints={['70%']}
+        >
+          <View>
+            <AnnounceButtonSheet />
+          </View>
+        </BottomSheetModal>
+      </View>
+    </BottomSheetModalProvider>
   )
 }
 
@@ -122,7 +259,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 3, // Add elevation for Android shadow effect
-  }
+  },
+  bottomSheet: {
+    paddingHorizontal: 20,
+    paddingVertical: 5,
+  },
 })
 
 export default AnnouncementScreen

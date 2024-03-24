@@ -1,16 +1,22 @@
-import React from 'react'
-import { View, StyleSheet, Text } from 'react-native'
-import { TextInput as Input } from 'react-native-paper'
-import { theme } from '../core/theme'
+import React from 'react';
+import { View, StyleSheet, Text } from 'react-native';
+import { TextInput as Input } from 'react-native-paper';
+import { theme } from '../core/theme';
 
-export default function TextInput({ errorText, description, ...props }) {
+export default function TextInput({ errorText, description, multiline = false, maxHeight = 400, ...props }) {
   return (
     <View style={styles.container}>
       <Input
-        style={styles.input}
+        style={[
+          styles.input,
+          multiline && { maxHeight: maxHeight },
+          multiline && styles.multiline,
+        ]}
         selectionColor={theme.colors.primary}
         underlineColor="transparent"
         mode="outlined"
+        multiline={multiline}
+        
         {...props}
       />
       {description && !errorText ? (
@@ -18,7 +24,7 @@ export default function TextInput({ errorText, description, ...props }) {
       ) : null}
       {errorText ? <Text style={styles.error}>{errorText}</Text> : null}
     </View>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
@@ -28,6 +34,9 @@ const styles = StyleSheet.create({
   },
   input: {
     backgroundColor: theme.colors.surface,
+  },
+  multiline: {
+    textAlignVertical: 'top',
   },
   description: {
     fontSize: 13,
@@ -39,4 +48,4 @@ const styles = StyleSheet.create({
     color: theme.colors.error,
     paddingTop: 8,
   },
-})
+});
