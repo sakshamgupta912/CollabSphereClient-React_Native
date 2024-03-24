@@ -5,12 +5,15 @@ import { createStackNavigator } from '@react-navigation/stack'
 import { theme } from './src/core/theme'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import AnnouncementScreen from './src/screens/InRoomScreens/AnnouncementScreen'
+
+
 import {
   StartScreen,
   LoginScreen,
   RegisterScreen,
   ResetPasswordScreen,
   Dashboard,
+  InRoomScreen
 } from './src/screens'
 
 const Stack = createStackNavigator()
@@ -33,6 +36,10 @@ export default function App() {
             <Stack.Screen
               name="AnnouncementScreen"
               component={AnnouncementScreen}
+            />
+            <Stack.Screen
+              name="InRoomScreen"
+              component={InRoomScreen}
             />
             <Stack.Screen
               name="ResetPasswordScreen"

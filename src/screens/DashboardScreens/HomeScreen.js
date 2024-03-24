@@ -272,7 +272,7 @@ const HomeScreen = () => {
             <ActivityIndicator size="large" color={theme.colors.primary} />
           ) : Array.isArray(roomCollection) && roomCollection.length > 0 ? (
             roomCollection.map((room) => (
-              <HomeCard key={room._id} room={room} />
+              <HomeCard key={room._id} room={room} uid={uid} token={token}  />
             ))
           ) : (
             <></>
@@ -295,7 +295,7 @@ const HomeScreen = () => {
         {/* Add Plus Bottom Sheet */}
         <BottomSheetModal
           style={styles.bottomSheet}
-          backgroundStyle={{ borderRadius: 40, backgroundColor: '#f0f0f0' }}
+          backgroundStyle={{ borderRadius: 40, backgroundColor: theme.colors.tertiary }}
           ref={CreateRoomBottomSheetModalRef}
           index={0}
           snapPoints={['48%']}
@@ -306,7 +306,7 @@ const HomeScreen = () => {
         {/* Enter Bottom Sheet */}
         <BottomSheetModal
           style={styles.bottomSheet}
-          backgroundStyle={{ borderRadius: 40 ,backgroundColor: '#f0f0f0' }}
+          backgroundStyle={{ borderRadius: 40 ,backgroundColor: theme.colors.tertiary }}
           ref={EnterRoomSheetModalRef}
           index={0}
           snapPoints={snapPoints}
