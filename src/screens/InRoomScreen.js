@@ -3,7 +3,12 @@ import { createMaterialTopTabNavigator } from '@react-navigation/material-top-ta
 import { View, Text, Platform, StatusBar } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import theme from '../core/theme'
+
 import AnnouncementScreen from './InRoomScreens/AnnouncementScreen'
+import AssignmentScreen from './InRoomScreens/AssignmentScreen'
+import FileScreen from './InRoomScreens/FileScreen'
+import MembersScreen from './InRoomScreens/MembersScreen'
+
 import Icon from 'react-native-vector-icons/MaterialIcons'
 
 const Tab = createMaterialTopTabNavigator()
@@ -14,13 +19,6 @@ export default function InRoomScreen(props) {
   const roomCode = props.route.params.roomCode
   const roomId = props.route.params.roomId
 
-  const Settings = () => {
-    return (
-      <View>
-        <Text>Settings</Text>
-      </View>
-    )
-  }
 
   const insets = useSafeAreaInsets()
 
@@ -52,7 +50,8 @@ export default function InRoomScreen(props) {
         />
         <Tab.Screen
           name="Assignment"
-          component={Settings}
+          component={AssignmentScreen}
+          initialParams={{ uid: uid, token: token, roomCode: roomCode, roomId: roomId }}
           options={{
             tabBarIcon: ({ color, focused }) => (
               <Icon name="assignment" size={24} color={focused ? theme.colors.primary : color} />
@@ -62,7 +61,8 @@ export default function InRoomScreen(props) {
         />
         <Tab.Screen
           name="Files"
-          component={Settings}
+          component={FileScreen}
+          initialParams={{ uid: uid, token: token, roomCode: roomCode, roomId: roomId }}
           options={{
             tabBarIcon: ({ color, focused }) => (
               <Icon name="folder" size={24} color={focused ? theme.colors.primary : color} />
@@ -72,7 +72,8 @@ export default function InRoomScreen(props) {
         />
         <Tab.Screen
           name="Members"
-          component={Settings}
+          component={MembersScreen}
+          initialParams={{ uid: uid, token: token, roomCode: roomCode, roomId: roomId }}
           options={{
             tabBarIcon: ({ color, focused }) => (
               <Icon name="people" size={24} color={focused ? theme.colors.primary : color} />
