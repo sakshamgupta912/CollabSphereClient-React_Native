@@ -33,6 +33,7 @@ export default function Dashboard({ navigation }) {
       screenOptions={{
         drawerActiveBackgroundColor: theme.colors.primary,
         drawerActiveTintColor: '#fff',
+        headerTintColor: theme.colors.primary,
       }}
     >
       <Drawer.Screen

@@ -16,6 +16,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons'
 import Button from './Button'
 import AsyncStorage from '@react-native-async-storage/async-storage' // Import AsyncStorage
 
+import theme from '../core/theme'
 
 export const CustomDrawer = ({ mainNavigation, ...props }) => {
   const logout = async () => {
@@ -39,7 +40,9 @@ export const CustomDrawer = ({ mainNavigation, ...props }) => {
   
   
   return (
-    <DrawerContentScrollView>
+    <DrawerContentScrollView
+    contentContainerStyle={{ backgroundColor: theme.colors.pr }}
+    >
       <View style={styles.drawerContent}>
         <View style={styles.userInfoSection}>
           <Avatar.Image
