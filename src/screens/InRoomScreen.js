@@ -9,7 +9,6 @@ import {
   StyleSheet,
 } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import BackButton from '../components/BackButton'
 import theme from '../core/theme'
 
 import AnnouncementScreen from './InRoomScreens/AnnouncementScreen'
@@ -20,7 +19,6 @@ import MembersScreen from './InRoomScreens/MembersScreen'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 import { useRoute, useNavigation } from '@react-navigation/native' // Import useNavigation hook
 import { TouchableOpacity } from 'react-native-gesture-handler'
-import { faCentSign } from '@fortawesome/free-solid-svg-icons'
 
 const Tab = createMaterialTopTabNavigator()
 
@@ -35,12 +33,12 @@ export default function InRoomScreen(props) {
 
   return (
     <>
-    <StatusBar backgroundColor={theme.colors.tertiary} />
+ 
     <View
       style={{
         flex: 1,
-        // paddingTop:
-        //   Platform.OS === 'android' ? StatusBar.currentHeight : insets.top,
+        paddingTop:
+          Platform.OS === 'android' ? StatusBar.currentHeight : insets.top,
       }}
     >
       
