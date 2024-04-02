@@ -1,6 +1,8 @@
-import { useEffect } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useRoute } from '@react-navigation/native'
-import React, { useState } from 'react'
+import React from 'react'
+import { ActivityIndicator, Alert } from 'react-native'
+import Icon from 'react-native-ico-material-design'
 import {
   View,
   Text,
@@ -10,6 +12,14 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from 'react-native'
+import {
+  BottomSheetModal,
+  BottomSheetModalProvider,
+} from '@gorhom/bottom-sheet'
+import Button from '../../components/Button'
+import theme from '../../core/theme'
+import * as DocumentPicker from 'expo-document-picker'
+import axios from '../../api/axios'
 
 const AssignmentScreen = (props) => {
   const uid = props.route.params.uid
@@ -17,125 +27,167 @@ const AssignmentScreen = (props) => {
   const roomCode = props.route.params.roomCode
   const roomId = props.route.params.roomId
 
-  const [searchQuery, setSearchQuery] = useState('')
-  const [appointments, setAppointments] = useState([
-    {
-      id: 1,
-      title: 'Appointment 1',
-      startDate: '2023-05-18',
-      endDate: '2023-05-18',
-      attendees: [
-        {
-          id: 1,
-          remoteImage: 'https://bootdey.com/img/Content/avatar/avatar1.png',
-        },
-        {
-          id: 2,
-          remoteImage: 'https://bootdey.com/img/Content/avatar/avatar2.png',
-        },
-        {
-          id: 3,
-          remoteImage: 'https://bootdey.com/img/Content/avatar/avatar8.png',
-        },
-        {
-          id: 4,
-          remoteImage: 'https://bootdey.com/img/Content/avatar/avatar1.png',
-        },
-        {
-          id: 5,
-          remoteImage: 'https://bootdey.com/img/Content/avatar/avatar3.png',
-        },
-        {
-          id: 6,
-          remoteImage: 'https://bootdey.com/img/Content/avatar/avatar5.png',
-        },
-      ],
-      backgroundColor: '#ffdcb2',
-      titleColor: '#ff8c00',
-    },
-    {
-      id: 2,
-      title: 'Appointment 2',
-      startDate: '2023-05-19',
-      endDate: '2023-05-19',
-      attendees: [
-        {
-          id: 7,
-          remoteImage: 'https://bootdey.com/img/Content/avatar/avatar2.png',
-        },
-        {
-          id: 8,
-          remoteImage: 'https://bootdey.com/img/Content/avatar/avatar4.png',
-        },
-        {
-          id: 9,
-          remoteImage: 'https://bootdey.com/img/Content/avatar/avatar6.png',
-        },
-      ],
-      backgroundColor: '#bfdfdf',
-      titleColor: '#008080',
-    },
-    {
-      id: 3,
-      title: 'Appointment 2',
-      startDate: '2023-05-19',
-      endDate: '2023-05-19',
-      attendees: [
-        {
-          id: 10,
-          remoteImage: 'https://bootdey.com/img/Content/avatar/avatar2.png',
-        },
-        {
-          id: 11,
-          remoteImage: 'https://bootdey.com/img/Content/avatar/avatar4.png',
-        },
-        {
-          id: 12,
-          remoteImage: 'https://bootdey.com/img/Content/avatar/avatar1.png',
-        },
-        {
-          id: 13,
-          remoteImage: 'https://bootdey.com/img/Content/avatar/avatar3.png',
-        },
-        {
-          id: 14,
-          remoteImage: 'https://bootdey.com/img/Content/avatar/avatar5.png',
-        },
-      ],
-      backgroundColor: '#e2caf8',
-      titleColor: '#8a2be2',
-    },
-    {
-      id: 4,
-      title: 'Appointment 2',
-      startDate: '2023-05-19',
-      endDate: '2023-05-19',
-      attendees: [
-        {
-          id: 15,
-          remoteImage: 'https://bootdey.com/img/Content/avatar/avatar2.png',
-        },
-        {
-          id: 16,
-          remoteImage: 'https://bootdey.com/img/Content/avatar/avatar4.png',
-        },
-        {
-          id: 17,
-          remoteImage: 'https://bootdey.com/img/Content/avatar/avatar6.png',
-        },
-      ],
-      backgroundColor: '#d8e4fa',
-      titleColor: '#6495ed',
-    },
-    // Add more appointments here
-  ])
+  const [AssignmentContent, setAssignmentContent] = useState([])
+  const [isAdmin, setIsAdmin] = useState(false)
+  // const [pageContent, setPageContent] = useState(null);
+  const [update, setUpdate] = useState(0)
+
+  const CreateAssignmentButtonSheetModalRef = useRef(null)
+  const snapPoints = ['48%']
+  const [selectedAssignment, setSelectedAssignment] = useState(null)
+
+  const handleAssignmentButtonPress = (assignment) => {
+    setSelectedAssignment(assignment)
+    CreateAssignmentButtonSheetModalRef.current?.present()
+  }
+  const closeCreateAssignmentButtonSheet = () => {
+    CreateAssignmentButtonSheetModalRef.current?.close()
+  }
+
+  const BottomSheetContent = () => {
+    const [bottomSheetData, setBottomSheetData] = useState(null)
+    const [selectedFile, setSelectedFile] = useState(null)
+
+    async function getAssignmentContent() {
+      try {
+        const response = await axios.post(
+          '/api/assignment/getAssignment',
+          {
+            assignmentID: selectedAssignment._id,
+          },
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              uid: uid,
+              authorization: `Bearer ${token}`,
+            },
+          }
+        )
+
+        setBottomSheetData(response.data.assignment)
+      } catch (error) {
+        console.error('Error fetching assignment content:', error)
+      }
+    }
+
+    // Function to handle file selection
+    const selectFile = async () => {
+      try {
+        const file = await DocumentPicker.getDocumentAsync({ type: '*/*' })
+        setSelectedFile(file)
+      } catch (error) {
+        console.error('Error selecting file:', error)
+      }
+    }
+
+    // Function to handle file submission
+    const submitFile = async () => {
+      if (selectedFile) {
+        const formData = new FormData()
+        formData.append('file', {
+          uri: selectedFile.uri,
+          name: selectedFile.name,
+          type: selectedFile.type,
+        })
+
+        try {
+          const response = await axios.post(
+            '/api/assignment/submitFile',
+            formData,
+            {
+              headers: {
+                'Content-Type': 'multipart/form-data',
+                uid: uid,
+                authorization: `Bearer ${token}`,
+              },
+            }
+          )
+
+          // Handle response if needed
+          console.log('File submitted successfully:', response.data)
+        } catch (error) {
+          console.error('Error submitting file:', error)
+          Alert.alert('Error', 'Failed to submit file. Please try again.')
+        }
+      } else {
+        Alert.alert('Error', 'Please select a file before submitting.')
+      }
+    }
+
+    // Call getAssignmentContent when component mounts
+    useEffect(() => {
+      getAssignmentContent()
+    }, [])
+    console.log(bottomSheetData)
+    // Render buttons only when bottomSheetData.description is valid
+    if (!bottomSheetData?.description) {
+      return (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="gray" />
+        </View>
+      )
+    }
+
+    return (
+      <View style={styles.post}>
+        <View style={styles.header}>
+          <View>
+            <Text style={styles.name}>
+              {bottomSheetData?.title ? bottomSheetData.title : 'Loading...'}
+            </Text>
+            <Text style={styles.date}>
+              {bottomSheetData?.dueDate
+                ? 'Due on ' + formatDueDate(bottomSheetData?.dueDate)
+                : ''}
+            </Text>
+          </View>
+        </View>
+        <Text style={styles.description}>
+          {bottomSheetData?.description ? bottomSheetData.title : ''}
+        </Text>
+
+        <View style={styles.filesContainer}>
+          {bottomSheetData?.files.map((file, index) => (
+            <View key={index} style={styles.fileItem}>
+              <Icon name="attachment-clip" color="#000" />
+              <Text style={styles.fileName}>{file.originalname}</Text>
+              {/* <Text style={styles.fileType}>{file.mimetype}</Text> */}
+            </View>
+          ))}
+        </View>
+        {/* Display selected file name if available */}
+       
+        {selectedFile && (
+          <Text style={styles.fileName2} color="black">{selectedFile?.assets[0]?.name}</Text>
+        )}
+        <Button
+          labelStyle={{ color: '#ffffff' }}
+          style={{ backgroundColor: 'grey' }}
+          mode="contained"
+          onPress={selectFile}
+        >
+          Select File
+        </Button>
+
+        {/* Button to submit file */}
+        <Button
+          labelStyle={{ color: '#ffffff' }}
+          mode="contained"
+          onPress={submitFile}
+        >
+          Submit
+        </Button>
+
+        <View style={styles.actions}></View>
+      </View>
+    )
+  }
 
   const colors = [
-    { backgroundColor: '#d8e4fa', titleColor: '#6495ed' },
-    { backgroundColor: '#e2caf8', titleColor: '#8a2be2' },
+    // { backgroundColor: '#e2caf8', titleColor: '#8a2be2' },
+    // { backgroundColor: '#bfdfdf', titleColor: '#008080' },
     { backgroundColor: '#bfdfdf', titleColor: '#008080' },
-    { backgroundColor: '#bfdfdf', titleColor: '#008080' },
-    { backgroundColor: '#ffdcb2', titleColor: '#ff8c00' },
+    // { backgroundColor: '#ffdcb2', titleColor: '#ff8c00' },
   ]
 
   function getRandomColor() {
@@ -143,19 +195,60 @@ const AssignmentScreen = (props) => {
     return colors[randomIndex]
   }
 
-  const renderAppointmentCard = ({ item }) => {
-    const randomColor = getRandomColor();
+  useEffect(() => {
+    async function getAssignments() {
+      const response = await axios.post(
+        '/api/teams/teamAssignments',
+
+        JSON.stringify({ teamID: roomId }),
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            authorization: `Bearer ${token}`,
+            uid: uid,
+          },
+          withCredentials: true,
+        }
+      )
+
+      if (response.status === 200) {
+        setIsAdmin(response.data.isAdmin)
+        setAssignmentContent(response.data.teamAssignments)
+
+        // setPageContent(response.data.teamAssignments.map(createAssignmentCard))
+        // cards = response.data.teamAssignments.map(createAssignmentCard)
+
+        // setAnnouncementContent(response.data.teamPosts);
+      }
+    }
+
+    getAssignments()
+  }, [update])
+
+  const formatDueDate = (dueDate) => {
+    const date = new Date(dueDate)
+    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString()
+  }
+
+  // Card creation
+  const renderAssignmentCard = ({ item }) => {
+    const randomColor = getRandomColor()
     return (
-      <View style={[styles.card, { backgroundColor: randomColor.backgroundColor }]}>
+      <View
+        style={[styles.card, { backgroundColor: randomColor.backgroundColor }]}
+      >
         <Text style={[styles.cardTitle, { color: randomColor.titleColor }]}>
           {item.title}
         </Text>
         <View style={styles.cardDates}>
-          <Text style={styles.cardDate}>{item.startDate}</Text>
+          <Text style={styles.cardDate}>{formatDueDate(item.dueDate)}</Text>
         </View>
         <View style={styles.cardContent}>
           <View style={styles.buttonsContainer}>
-            <TouchableOpacity style={styles.actionButton}>
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() => handleAssignmentButtonPress(item)}
+            >
               <Text style={styles.buttonText}>View</Text>
             </TouchableOpacity>
           </View>
@@ -164,20 +257,36 @@ const AssignmentScreen = (props) => {
     )
   }
 
-  const searchFilter = (item) => {
-    const query = searchQuery.toLowerCase()
-    return item.title.toLowerCase().includes(query)
-  }
-
   return (
-    <View style={styles.container}>
-      <FlatList
-        contentContainerStyle={styles.listContainer}
-        data={appointments.filter(searchFilter)}
-        renderItem={renderAppointmentCard}
-        keyExtractor={(item) => item.id.toString()}
-      />
-    </View>
+    <BottomSheetModalProvider>
+      <View style={styles.container}>
+        {}
+        <FlatList
+          data={AssignmentContent}
+          contentContainerStyle={styles.listContainer}
+          renderItem={renderAssignmentCard}
+          keyExtractor={(item) => item._id.toString()}
+        />
+      </View>
+
+      <BottomSheetModal
+        style={styles.bottomSheet}
+        backgroundStyle={{
+          borderRadius: 40,
+          backgroundColor: theme.colors.tertiary,
+        }}
+        ref={CreateAssignmentButtonSheetModalRef}
+        index={0}
+        snapPoints={['70%']}
+      >
+        {selectedAssignment && (
+          <View>
+            <BottomSheetContent />
+            {/* Render other assignment details */}
+          </View>
+        )}
+      </BottomSheetModal>
+    </BottomSheetModalProvider>
   )
 }
 
@@ -212,6 +321,14 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     paddingVertical: 5,
   },
+  fileName: {
+    paddingLeft: 5,
+    color: theme.colors.primary,
+  },
+  fileName2: {
+    
+    color: theme.colors.primary,
+  },
   cardDates: {
     flexDirection: 'row',
     paddingVertical: 5,
@@ -245,7 +362,76 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   buttonText: {
-    color: '#00008B',
+    color: '#000000',
+  },
+  fileItem: {
+    flexDirection: 'row',
+  },
+  AssignmentButton: {
+    position: 'absolute',
+    bottom: 20,
+    right: 10,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: theme.colors.primary, // Adjust button color as needed
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 3, // Add elevation for Android shadow effect
+  },
+  bottomSheet: {
+    padding: 10,
+  },
+  post: {
+    marginHorizontal: 10,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    marginBottom: 20,
+    borderBottomWidth: 0.5,
+    borderBottomColor: '#808080',
+    padding: 10,
+  },
+  avatar: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  name: {
+    fontSize: 23,
+    fontWeight: 'bold',
+  },
+  date: {
+    fontSize: 15,
+    color: 'gray',
+  },
+  description: {
+    fontSize: 15,
+    marginBottom: 10,
+  },
+  actions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 10,
+  },
+
+  actionText: {
+    fontSize: 18,
+    color: '#3b5998',
+  },
+  actionCount: {
+    fontSize: 18,
+    marginLeft: 5,
+  },
+  loadingContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 })
 
