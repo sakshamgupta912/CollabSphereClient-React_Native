@@ -7,7 +7,8 @@ const FileScreen = (props) => {
   const token = props.route.params.token
   const roomCode = props.route.params.roomCode
   const roomId = props.route.params.roomId
-  console.log(token)
+  console.log('Token '+token)
+  console.log('uid '+uid)
 
   return <Text></Text>
 }

@@ -66,10 +66,12 @@ const AssignmentScreen = (props) => {
         )
 
         setBottomSheetData(response.data.assignment)
-        if(response.data.assignment.submitted)
-        {
-          
+        if (response.data.assignment.submitted) {
+          console.log(response.data.assignment.submitted)
           setButtonText('Un-Submit')
+        }
+        else{
+          setButtonText('Submit')
         }
       } catch (error) {
         Alert.alert('Error fetching assignment content:', error)
@@ -89,8 +91,7 @@ const AssignmentScreen = (props) => {
     const [buttonText, setButtonText] = useState('Submit')
     // Function to handle file submission
     const submitFile = async () => {
-      if(buttonText==="Submit")
-      {
+      if (buttonText === 'Submit') {
         if (selectedFile) {
           const formData = new FormData()
           formData.append('file', {
@@ -98,7 +99,7 @@ const AssignmentScreen = (props) => {
             name: selectedFile.name,
             type: selectedFile.type,
           })
-  
+
           const response = await axios.post(
             '/api/assignment/submitAssignment',
             formData,
@@ -111,51 +112,42 @@ const AssignmentScreen = (props) => {
               },
             }
           )
-  
+
           // Handle response if needed
           console.log('File submitted successfully:', response.data)
-  
+
           if (response.status === 200) {
             setButtonText('Un-Submit')
           }
-         
         } else {
           Alert.alert('Error', 'Please select a file before submitting.')
         }
-      }
-      else
-      {
-        try{
+      } else {
+        try {
           const response = await axios.put(
-            "/api/assignment/unSubmitAssignment",
+            '/api/assignment/unSubmitAssignment',
             {
               headers: {
                 authorization: `Token ${token}`,
                 uid: uid,
                 assid: selectedAssignment._id,
-                'Content-Type': 'multipart/form-data',
-                uid: uid,
-                authorization: `Token ${token}`,
               },
             }
-          );  
-          if(response.status === 200){
-            setButtonText("Submit")
+          )
+          if (response.status === 200) {
+            setButtonText('Submit')
           }
-        }
-      
-        catch(error){
-          Alert.alert("Error", "Something went wrong. Please try again.")
+        } catch (error) {
+          Alert.alert('Error', 'Something went wrong. Please try again.')
         }
       }
-     
     }
 
     // Call getAssignmentContent when component mounts
     useEffect(() => {
       getAssignmentContent()
     }, [])
-    
+
     // Render buttons only when bottomSheetData.description is valid
     if (!bottomSheetData?.description) {
       return (
@@ -206,24 +198,29 @@ const AssignmentScreen = (props) => {
             {selectedFile?.assets[0]?.name}
           </Text>
         )}
+        {!isAdmin && (
+          <View>
+            {buttonText === 'Submit' && (
+              <Button
+                labelStyle={{ color: '#ffffff' }}
+                style={{ backgroundColor: 'grey' }}
+                mode="contained"
+                onPress={selectFile}
+              >
+                Select File
+              </Button>
+            )}
 
-        <Button
-          labelStyle={{ color: '#ffffff' }}
-          style={{ backgroundColor: 'grey' }}
-          mode="contained"
-          onPress={selectFile}
-        >
-          Select File
-        </Button>
-
-        {/* Button to submit file */}
-        <Button
-          labelStyle={{ color: '#ffffff' }}
-          mode="contained"
-          onPress={submitFile}
-        >
-          {buttonText}
-        </Button>
+            {/* Button to submit file */}
+            <Button
+              labelStyle={{ color: '#ffffff' }}
+              mode="contained"
+              onPress={submitFile}
+            >
+              {buttonText}
+            </Button>
+          </View>
+        )}
 
         <View style={styles.actions}></View>
       </View>
@@ -244,10 +241,10 @@ const AssignmentScreen = (props) => {
 
   useEffect(() => {
     async function getAssignments() {
-      try{
+      try {
         const response = await axios.post(
           '/api/teams/teamAssignments',
-  
+
           JSON.stringify({ teamID: roomId }),
           {
             headers: {
@@ -258,17 +255,14 @@ const AssignmentScreen = (props) => {
             withCredentials: true,
           }
         )
-  
+
         if (response.status === 200) {
           setIsAdmin(response.data.isAdmin)
           setAssignmentContent(response.data.teamAssignments)
         }
-      }
-      catch(error)
-      {
+      } catch (error) {
         Alert.alert('Something went wrong, try again later.')
       }
-     
     }
 
     getAssignments()
