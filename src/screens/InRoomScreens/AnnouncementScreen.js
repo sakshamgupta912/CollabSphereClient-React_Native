@@ -19,17 +19,10 @@ import {
   BottomSheetModalProvider,
 } from '@gorhom/bottom-sheet'
 import * as DocumentPicker from 'expo-document-picker'
+import nanoid from '../../helpers/nanoid'
 
 const AnnouncementScreen = (props) => {
-  const nanoid = () => {
-    // Generate a random number
-    const randomNumber = Math.floor(Math.random() * 1000000)
-    // Get the current timestamp
-    const timestamp = Date.now()
-    // Concatenate the timestamp and random number to create the ID
-    const uniqueId = `${timestamp}-${randomNumber}`
-    return uniqueId
-  }
+ 
 
   const uid = props.route.params.uid
   const token = props.route.params.token

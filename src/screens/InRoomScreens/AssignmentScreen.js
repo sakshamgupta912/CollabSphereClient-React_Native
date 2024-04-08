@@ -19,6 +19,7 @@ import {
 import Button from '../../components/Button'
 import theme from '../../core/theme'
 import * as DocumentPicker from 'expo-document-picker'
+import nanoid from '../../helpers/nanoid'
 import axios from '../../api/axios'
 
 const AssignmentScreen = (props) => {
@@ -65,8 +66,13 @@ const AssignmentScreen = (props) => {
         )
 
         setBottomSheetData(response.data.assignment)
+        if(response.data.assignment.submitted)
+        {
+          
+          setButtonText('Un-Submit')
+        }
       } catch (error) {
-        console.error('Error fetching assignment content:', error)
+        Alert.alert('Error fetching assignment content:', error)
       }
     }
 
@@ -76,49 +82,80 @@ const AssignmentScreen = (props) => {
         const file = await DocumentPicker.getDocumentAsync({ type: '*/*' })
         setSelectedFile(file)
       } catch (error) {
-        console.error('Error selecting file:', error)
+        Alert.alert('Error selecting file:', error)
       }
     }
 
+    const [buttonText, setButtonText] = useState('Submit')
     // Function to handle file submission
     const submitFile = async () => {
-      if (selectedFile) {
-        const formData = new FormData()
-        formData.append('file', {
-          uri: selectedFile.uri,
-          name: selectedFile.name,
-          type: selectedFile.type,
-        })
-
-        try {
+      if(buttonText==="Submit")
+      {
+        if (selectedFile) {
+          const formData = new FormData()
+          formData.append('file', {
+            uri: selectedFile.uri,
+            name: selectedFile.name,
+            type: selectedFile.type,
+          })
+  
           const response = await axios.post(
-            '/api/assignment/submitFile',
+            '/api/assignment/submitAssignment',
             formData,
             {
               headers: {
                 'Content-Type': 'multipart/form-data',
                 uid: uid,
-                authorization: `Bearer ${token}`,
+                authorization: `Token ${token}`,
+                uploadid: nanoid(),
               },
             }
           )
-
+  
           // Handle response if needed
           console.log('File submitted successfully:', response.data)
-        } catch (error) {
-          console.error('Error submitting file:', error)
-          Alert.alert('Error', 'Failed to submit file. Please try again.')
+  
+          if (response.status === 200) {
+            setButtonText('Un-Submit')
+          }
+         
+        } else {
+          Alert.alert('Error', 'Please select a file before submitting.')
         }
-      } else {
-        Alert.alert('Error', 'Please select a file before submitting.')
       }
+      else
+      {
+        try{
+          const response = await axios.put(
+            "/api/assignment/unSubmitAssignment",
+            {
+              headers: {
+                authorization: `Token ${token}`,
+                uid: uid,
+                assid: selectedAssignment._id,
+                'Content-Type': 'multipart/form-data',
+                uid: uid,
+                authorization: `Token ${token}`,
+              },
+            }
+          );  
+          if(response.status === 200){
+            setButtonText("Submit")
+          }
+        }
+      
+        catch(error){
+          Alert.alert("Error", "Something went wrong. Please try again.")
+        }
+      }
+     
     }
 
     // Call getAssignmentContent when component mounts
     useEffect(() => {
       getAssignmentContent()
     }, [])
-    console.log(bottomSheetData)
+    
     // Render buttons only when bottomSheetData.description is valid
     if (!bottomSheetData?.description) {
       return (
@@ -127,14 +164,21 @@ const AssignmentScreen = (props) => {
         </View>
       )
     }
-
     return (
       <View style={styles.post}>
         <View style={styles.header}>
           <View>
-            <Text style={styles.name}>
-              {bottomSheetData?.title ? bottomSheetData.title : 'Loading...'}
-            </Text>
+            <View>
+              <Text style={styles.name}>
+                {bottomSheetData?.title ? bottomSheetData.title : 'Loading...'}
+              </Text>
+              <Text>
+                {bottomSheetData?.grade
+                  ? 'Graded out of ' + bottomSheetData.grade
+                  : 'Loading...'}
+              </Text>
+            </View>
+
             <Text style={styles.date}>
               {bottomSheetData?.dueDate
                 ? 'Due on ' + formatDueDate(bottomSheetData?.dueDate)
@@ -156,10 +200,13 @@ const AssignmentScreen = (props) => {
           ))}
         </View>
         {/* Display selected file name if available */}
-       
+
         {selectedFile && (
-          <Text style={styles.fileName2} color="black">{selectedFile?.assets[0]?.name}</Text>
+          <Text style={styles.fileName2} color="black">
+            {selectedFile?.assets[0]?.name}
+          </Text>
         )}
+
         <Button
           labelStyle={{ color: '#ffffff' }}
           style={{ backgroundColor: 'grey' }}
@@ -175,7 +222,7 @@ const AssignmentScreen = (props) => {
           mode="contained"
           onPress={submitFile}
         >
-          Submit
+          {buttonText}
         </Button>
 
         <View style={styles.actions}></View>
@@ -197,29 +244,31 @@ const AssignmentScreen = (props) => {
 
   useEffect(() => {
     async function getAssignments() {
-      const response = await axios.post(
-        '/api/teams/teamAssignments',
-
-        JSON.stringify({ teamID: roomId }),
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            authorization: `Bearer ${token}`,
-            uid: uid,
-          },
-          withCredentials: true,
+      try{
+        const response = await axios.post(
+          '/api/teams/teamAssignments',
+  
+          JSON.stringify({ teamID: roomId }),
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              authorization: `Bearer ${token}`,
+              uid: uid,
+            },
+            withCredentials: true,
+          }
+        )
+  
+        if (response.status === 200) {
+          setIsAdmin(response.data.isAdmin)
+          setAssignmentContent(response.data.teamAssignments)
         }
-      )
-
-      if (response.status === 200) {
-        setIsAdmin(response.data.isAdmin)
-        setAssignmentContent(response.data.teamAssignments)
-
-        // setPageContent(response.data.teamAssignments.map(createAssignmentCard))
-        // cards = response.data.teamAssignments.map(createAssignmentCard)
-
-        // setAnnouncementContent(response.data.teamPosts);
       }
+      catch(error)
+      {
+        Alert.alert('Something went wrong, try again later.')
+      }
+     
     }
 
     getAssignments()
@@ -326,7 +375,6 @@ const styles = StyleSheet.create({
     color: theme.colors.primary,
   },
   fileName2: {
-    
     color: theme.colors.primary,
   },
   cardDates: {
