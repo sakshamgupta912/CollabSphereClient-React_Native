@@ -2,21 +2,25 @@ import { useEffect, useState, useRef } from 'react'
 import { useRoute } from '@react-navigation/native'
 import React from 'react'
 import { ActivityIndicator, Alert } from 'react-native'
+import { AntDesign } from '@expo/vector-icons'
+import TextInput from '../../components/TextInput'
+import Button from '../../components/Button'
 import Icon from 'react-native-ico-material-design'
+import DateTimePickerModal from 'react-native-modal-datetime-picker'
 import {
   View,
   Text,
-  TextInput,
   FlatList,
   Image,
   TouchableOpacity,
   StyleSheet,
+  Pressable,
+  Platform,
 } from 'react-native'
 import {
   BottomSheetModal,
   BottomSheetModalProvider,
 } from '@gorhom/bottom-sheet'
-import Button from '../../components/Button'
 import theme from '../../core/theme'
 import * as DocumentPicker from 'expo-document-picker'
 import nanoid from '../../helpers/nanoid'
@@ -33,16 +37,189 @@ const AssignmentScreen = (props) => {
   // const [pageContent, setPageContent] = useState(null);
   const [update, setUpdate] = useState(0)
 
+  //  Add assingment sheet
   const CreateAssignmentButtonSheetModalRef = useRef(null)
+  const handleCreateAssignmentButton = () => {
+    CreateAssignmentButtonSheetModalRef.current?.present()
+  }
+  const closeCreateAssignmentButton = () => {
+    CreateAssignmentButtonSheetModalRef.current?.close()
+  }
+
+  const AddAssignmentSheet = () => {
+    const [assignmentTitle, setAssignmentTitle] = useState({
+      value: '',
+      error: '',
+    })
+    const [annoucementDesc, setAnnoucementDesc] = useState({
+      value: '',
+      error: '',
+    })
+
+    const [assignmentNumber, setAssignmentNumber] = useState({
+      value: '',
+      error: '',
+    })
+
+    const [isDatePickerVisible, setDatePickerVisibility] = useState(false)
+
+    const showDatePicker = () => {
+      setDatePickerVisibility(true)
+    }
+
+    const hideDatePicker = () => {
+      setDatePickerVisibility(false)
+    }
+    const [assignmentDate, setAssignmentDate] = useState(new Date())
+
+    const handleConfirmDate = (date) => {
+      setAssignmentDate(date)
+      hideDatePicker()
+    }
+
+    const [isTimePickerVisible, setTimePickerVisibility] = useState(false)
+
+    const showTimePicker = () => {
+      setTimePickerVisibility(true)
+    }
+
+    const hideTimePicker = () => {
+      setTimePickerVisibility(false)
+    }
+    const [assignmentTime, setAssignmentTime] = useState(new Date().getTime())
+
+    const handleConfirmTime = (time) => {
+      setAssignmentTime(time)
+      hideTimePicker()
+    }
+
+    // Selection of Files
+    const [selectedFiles, setFile] = useState(null)
+
+    const pickSomething = async () => {
+      try {
+        const docRes = await DocumentPicker.getDocumentAsync({
+          multiple: true,
+        })
+        setFile(docRes)
+        console.log(docRes)
+      } catch (error) {
+        console.log('Error while selecting file: ', error)
+      }
+    }
+
+    return (
+      <View>
+        <TextInput
+          label="Title"
+          returnKeyType="next"
+          value={assignmentTitle.value}
+          onChangeText={(text) =>
+            setAssignmentTitle({ value: text, error: '' })
+          }
+          error={!!assignmentTitle.error}
+          errorText={assignmentTitle.error}
+        />
+        <TextInput
+          label="Desciption"
+          multiline={true}
+          returnKeyType="next"
+          value={annoucementDesc.value}
+          onChangeText={(text) =>
+            setAnnoucementDesc({ value: text, error: '' })
+          }
+          error={!!annoucementDesc.error}
+          errorText={annoucementDesc.error}
+        />
+        <TextInput
+          label="Number"
+          keyboardType="numeric"
+          returnKeyType="next"
+          value={assignmentNumber.value}
+          onChangeText={(text) =>
+            setAssignmentNumber({ value: text, error: '' })
+          }
+          error={!!assignmentNumber.error}
+          errorText={assignmentNumber.error}
+        />
+        {/* Date Picker  */}
+        <DateTimePickerModal
+          isVisible={isDatePickerVisible}
+          mode="date"
+          onConfirm={handleConfirmDate}
+          onCancel={hideDatePicker}
+          minimumDate={new Date()}
+          accentColor={theme.colors.primary}
+          buttonTextColorIOS={theme.colors.primary}
+        />
+        <Pressable onPress={showDatePicker}>
+          <TextInput
+            label="Due Date"
+            value={assignmentDate.toDateString()}
+            editable={false}
+            pointerEvents="none"
+          ></TextInput>
+        </Pressable>
+
+        {/* Time Picker  */}
+        <DateTimePickerModal
+          isVisible={isTimePickerVisible}
+          mode="time"
+          onConfirm={handleConfirmTime}
+          onCancel={hideTimePicker}
+          accentColor={theme.colors.primary}
+          buttonTextColorIOS={theme.colors.primary}
+        />
+        <Pressable onPress={showTimePicker}>
+          <TextInput
+            label="Due Time"
+            value={new Date(assignmentTime).toLocaleTimeString()}
+            editable={false}
+            pointerEvents="none"
+          ></TextInput>
+        </Pressable>
+
+        {/* File Selection */}
+        <View>
+          {selectedFiles?.assets && selectedFiles?.assets.length > 0 ? (
+            selectedFiles.assets.map((file, index) => (
+              <Text style={{color: theme.colors.primary}} key={index}>{file.name}</Text>
+            ))
+          ) : (
+            <></>
+          )}
+        </View>
+
+        <Button
+          labelStyle={{ color: '#ffffff' }}
+          mode="contained"
+          onPress={pickSomething}
+        >
+          Select Files
+        </Button>
+
+        <Button
+          labelStyle={{ color: '#ffffff' }}
+          mode="contained"
+          onPress={() => console.log('Create Assignment Pressed')}
+        >
+          Create Assignment
+        </Button>
+      </View>
+    )
+  }
+
+  // Bottom sheet content
+  const ShowAssignmentSheetModalRef = useRef(null)
   const snapPoints = ['48%']
   const [selectedAssignment, setSelectedAssignment] = useState(null)
 
-  const handleAssignmentButtonPress = (assignment) => {
+  const handleAssignmentCardPress = (assignment) => {
     setSelectedAssignment(assignment)
-    CreateAssignmentButtonSheetModalRef.current?.present()
+    ShowAssignmentSheetModalRef.current?.present()
   }
-  const closeCreateAssignmentButtonSheet = () => {
-    CreateAssignmentButtonSheetModalRef.current?.close()
+  const closeShowAssignmentSheet = () => {
+    ShowAssignmentSheetModalRef.current?.close()
   }
 
   const BottomSheetContent = () => {
@@ -69,8 +246,7 @@ const AssignmentScreen = (props) => {
         if (response.data.assignment.submitted) {
           console.log(response.data.assignment.submitted)
           setButtonText('Un-Submit')
-        }
-        else{
+        } else {
           setButtonText('Submit')
         }
       } catch (error) {
@@ -117,6 +293,7 @@ const AssignmentScreen = (props) => {
           console.log('File submitted successfully:', response.data)
 
           if (response.status === 200) {
+            closeShowAssignmentSheet()
             setButtonText('Un-Submit')
           }
         } else {
@@ -136,6 +313,7 @@ const AssignmentScreen = (props) => {
           )
           if (response.status === 200) {
             setButtonText('Submit')
+            setUpdate((prev) => prev + 1)
           }
         } catch (error) {
           Alert.alert('Error', 'Something went wrong. Please try again.')
@@ -156,6 +334,7 @@ const AssignmentScreen = (props) => {
         </View>
       )
     }
+    console.log('BottomSheetData:', bottomSheetData)
     return (
       <View style={styles.post}>
         <View style={styles.header}>
@@ -239,32 +418,32 @@ const AssignmentScreen = (props) => {
     return colors[randomIndex]
   }
 
-  useEffect(() => {
-    async function getAssignments() {
-      try {
-        const response = await axios.post(
-          '/api/teams/teamAssignments',
+  async function getAssignments() {
+    try {
+      const response = await axios.post(
+        '/api/teams/teamAssignments',
 
-          JSON.stringify({ teamID: roomId }),
-          {
-            headers: {
-              'Content-Type': 'application/json',
-              authorization: `Bearer ${token}`,
-              uid: uid,
-            },
-            withCredentials: true,
-          }
-        )
-
-        if (response.status === 200) {
-          setIsAdmin(response.data.isAdmin)
-          setAssignmentContent(response.data.teamAssignments)
+        JSON.stringify({ teamID: roomId }),
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            authorization: `Bearer ${token}`,
+            uid: uid,
+          },
+          withCredentials: true,
         }
-      } catch (error) {
-        Alert.alert('Something went wrong, try again later.')
-      }
-    }
+      )
 
+      if (response.status === 200) {
+        setIsAdmin(response.data.isAdmin)
+        setAssignmentContent(response.data.teamAssignments)
+      }
+    } catch (error) {
+      Alert.alert('Something went wrong, try again later.')
+    }
+  }
+
+  useEffect(() => {
     getAssignments()
   }, [update])
 
@@ -290,7 +469,7 @@ const AssignmentScreen = (props) => {
           <View style={styles.buttonsContainer}>
             <TouchableOpacity
               style={styles.actionButton}
-              onPress={() => handleAssignmentButtonPress(item)}
+              onPress={() => handleAssignmentCardPress(item)}
             >
               <Text style={styles.buttonText}>View</Text>
             </TouchableOpacity>
@@ -318,17 +497,41 @@ const AssignmentScreen = (props) => {
           borderRadius: 40,
           backgroundColor: theme.colors.tertiary,
         }}
-        ref={CreateAssignmentButtonSheetModalRef}
+        ref={ShowAssignmentSheetModalRef}
         index={0}
         snapPoints={['70%']}
       >
         {selectedAssignment && (
           <View>
             <BottomSheetContent />
-            {/* Render other assignment details */}
           </View>
         )}
       </BottomSheetModal>
+
+      {isAdmin && (
+        <TouchableOpacity
+          style={styles.AddAssignmentButton}
+          onPress={handleCreateAssignmentButton}
+        >
+          <AntDesign name="addfile" size={32} color="#fff" />
+        </TouchableOpacity>
+      )}
+      {isAdmin && (
+        <BottomSheetModal
+          style={styles.bottomSheet2}
+          backgroundStyle={{
+            borderRadius: 40,
+            backgroundColor: theme.colors.tertiary,
+          }}
+          ref={CreateAssignmentButtonSheetModalRef}
+          index={0}
+          snapPoints={['95%']}
+        >
+          <View>
+            <AddAssignmentSheet />
+          </View>
+        </BottomSheetModal>
+      )}
     </BottomSheetModalProvider>
   )
 }
@@ -423,6 +626,22 @@ const styles = StyleSheet.create({
   },
   bottomSheet: {
     padding: 10,
+  },
+  bottomSheet2: {
+    padding: 20,
+  },
+
+  AddAssignmentButton: {
+    position: 'absolute',
+    bottom: 20,
+    right: 10,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: theme.colors.primary, // Adjust button color as needed
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 3, // Add elevation for Android shadow effect
   },
   post: {
     marginHorizontal: 10,

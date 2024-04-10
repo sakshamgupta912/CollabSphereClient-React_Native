@@ -39,7 +39,7 @@ const AnnouncementScreen = (props) => {
   }
 
   const AnnounceButtonSheet = () => {
-    const [file, setFile] = useState([])
+    const [selectedFiles, setFile] = useState([])
     const [annoucementMessage, setAnnoucementMessage] = useState({
       value: '',
       error: '',
@@ -47,7 +47,7 @@ const AnnouncementScreen = (props) => {
 
     const pickSomething = async () => {
       try {
-        const docRes = await DocumentPicker.getDocumentAsync();
+        const docRes = await DocumentPicker.getDocumentAsync({multiple:true});
         setFile(docRes)
         console.log(docRes)
        
@@ -67,13 +67,13 @@ const AnnouncementScreen = (props) => {
             error: 'Message should not be empty!',
           }))
         } else {
-          console.log('InsideFile:', file)
+          console.log('InsideFile:', selectedFiles)
           const response = await axios.post(
             '/api/post/createPost',
             {
               teamID: roomId,
               content: annoucementMessage.value,
-              files: file,
+              files: selectedFiles,
             },
             {
               headers: {
@@ -109,7 +109,15 @@ const AnnouncementScreen = (props) => {
           error={!!annoucementMessage.error}
           errorText={annoucementMessage.error}
         />
-
+        <View>
+          {selectedFiles?.assets && selectedFiles?.assets.length > 0 ? (
+            selectedFiles.assets.map((file, index) => (
+              <Text style={{color: theme.colors.primary}} key={index}>{file.name}</Text>
+            ))
+          ) : (
+            <></>
+          )}
+        </View>
         <Button
           labelStyle={{ color: '#ffffff' }}
           mode="contained"
