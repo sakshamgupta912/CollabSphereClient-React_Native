@@ -86,10 +86,18 @@ const AssignmentScreen = (props) => {
     const hideTimePicker = () => {
       setTimePickerVisibility(false)
     }
-    const [assignmentTime, setAssignmentTime] = useState(new Date().getTime())
+    const [assignmentTime, setAssignmentTime] = useState({
+      value: new Date().getTime() + 60 * 60 * 1000,
+      error: '',
+    })
 
-    const handleConfirmTime = (time) => {
-      setAssignmentTime(time)
+    const handleConfirmTime = (date) => {
+      
+      const time = new Date(date).getTime()
+      setAssignmentTime((prev) => ({
+        ...prev,
+        value: time,
+      }))
       hideTimePicker()
     }
 
@@ -102,9 +110,90 @@ const AssignmentScreen = (props) => {
           multiple: true,
         })
         setFile(docRes)
-        console.log(docRes)
+        
       } catch (error) {
-        console.log('Error while selecting file: ', error)
+        Alert.alert('Error while selecting file: ', error)
+      }
+    }
+
+    const handleCreateAssignment = async () => {
+      try {
+        if (!assignmentTitle.value || assignmentTitle.value.length === 0) {
+          setAssignmentTitle((prev) => ({
+            ...prev,
+            error: 'Title should not be empty!',
+          }))
+        }
+        if (!annoucementDesc.value || annoucementDesc.value.length === 0) {
+          setAnnoucementDesc((prev) => ({
+            ...prev,
+            error: 'Description should not be empty!',
+          }))
+        }
+        if (!assignmentNumber.value || assignmentNumber.value.length === 0) {
+          setAssignmentNumber((prev) => ({
+            ...prev,
+            error: 'Grade should not be empty!',
+          }))
+        }
+        if (
+          assignmentTime.value < new Date().getTime() &&
+          assignmentDate.getDate() === new Date().getDate()
+        ) {
+          setAssignmentTime((prev) => ({
+            ...prev,
+            error: 'Time can not be in the past!',
+          }))
+        }
+
+        // API calling to create assingment
+        else {
+          setAssignmentTime((prev) => ({
+            ...prev,
+            error: '',
+          }))
+
+          // Format date and time
+          const timeInMilliseconds = parseInt(assignmentTime.value)
+          const assignmentDateTime = new Date(timeInMilliseconds)
+
+          const formattedDate = new Date(assignmentDate)
+            .toISOString()
+            .split('T')[0] // Format date
+          const formattedTime = assignmentDateTime
+            .toISOString()
+            .split('T')[1]
+            .split('.')[0] // Format time
+
+          // Combine date and time
+          const dueDate = `${formattedDate}T${formattedTime}.000Z`
+
+          const response = await axios.post(
+            '/api/assignment/createAssignment',
+            {
+              teamID: roomId,
+              title: assignmentTitle.value,
+              description: annoucementDesc.value,
+              dueDate: dueDate,
+              grade: assignmentNumber.value,
+            },
+            {
+              headers: {
+                'Content-Type': 'application/json',
+                uid: uid,
+                authorization: `Token ${token}`,
+                uploadid: nanoid(),
+              },
+            }
+          )
+
+          if (response.status === 200) {
+            setUpdate((prev) => prev + 1)
+            closeCreateAssignmentButton()
+          }
+        }
+      } catch (error) {
+        Alert.alert('Something went wrong! Please try again later ', error)
       }
     }
 
@@ -132,7 +221,7 @@ const AssignmentScreen = (props) => {
           errorText={annoucementDesc.error}
         />
         <TextInput
-          label="Number"
+          label="Grade"
           keyboardType="numeric"
           returnKeyType="next"
           value={assignmentNumber.value}
@@ -167,15 +256,18 @@ const AssignmentScreen = (props) => {
           mode="time"
           onConfirm={handleConfirmTime}
           onCancel={hideTimePicker}
+          value={new Date(assignmentTime.value)}
           accentColor={theme.colors.primary}
           buttonTextColorIOS={theme.colors.primary}
         />
         <Pressable onPress={showTimePicker}>
           <TextInput
             label="Due Time"
-            value={new Date(assignmentTime).toLocaleTimeString()}
+            value={new Date(assignmentTime.value).toLocaleTimeString()}
             editable={false}
             pointerEvents="none"
+            error={!!assignmentTime.error}
+            errorText={assignmentTime.error}
           ></TextInput>
         </Pressable>
 
@@ -183,7 +275,9 @@ const AssignmentScreen = (props) => {
         <View>
           {selectedFiles?.assets && selectedFiles?.assets.length > 0 ? (
             selectedFiles.assets.map((file, index) => (
-              <Text style={{color: theme.colors.primary}} key={index}>{file.name}</Text>
+              <Text style={{ color: theme.colors.primary }} key={index}>
+                {file.name}
+              </Text>
             ))
           ) : (
             <></>
@@ -201,7 +295,7 @@ const AssignmentScreen = (props) => {
         <Button
           labelStyle={{ color: '#ffffff' }}
           mode="contained"
-          onPress={() => console.log('Create Assignment Pressed')}
+          onPress={handleCreateAssignment}
         >
           Create Assignment
         </Button>
@@ -244,7 +338,6 @@ const AssignmentScreen = (props) => {
 
         setBottomSheetData(response.data.assignment)
         if (response.data.assignment.submitted) {
-          console.log(response.data.assignment.submitted)
           setButtonText('Un-Submit')
         } else {
           setButtonText('Submit')
@@ -263,8 +356,9 @@ const AssignmentScreen = (props) => {
         Alert.alert('Error selecting file:', error)
       }
     }
-
+    
     const [buttonText, setButtonText] = useState('Submit')
+    
     // Function to handle file submission
     const submitFile = async () => {
       if (buttonText === 'Submit') {
@@ -288,9 +382,6 @@ const AssignmentScreen = (props) => {
               },
             }
           )
-
-          // Handle response if needed
-          console.log('File submitted successfully:', response.data)
 
           if (response.status === 200) {
             closeShowAssignmentSheet()
@@ -334,7 +425,7 @@ const AssignmentScreen = (props) => {
         </View>
       )
     }
-    console.log('BottomSheetData:', bottomSheetData)
+
     return (
       <View style={styles.post}>
         <View style={styles.header}>
