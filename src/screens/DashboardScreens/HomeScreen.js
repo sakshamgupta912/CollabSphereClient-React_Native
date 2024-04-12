@@ -16,7 +16,7 @@ import {
 } from '@gorhom/bottom-sheet'
 import Button from '../../components/Button'
 
-const HomeScreen = () => {
+const HomeScreen = ({navigation}) => {
   const [roomCollection, setRoomCollection] = useState(null)
   const [loading, setLoading] = useState(true) // Manage loading state
   const [token, setToken] = useState()
@@ -272,7 +272,7 @@ const HomeScreen = () => {
             <ActivityIndicator size="large" color={theme.colors.primary} />
           ) : Array.isArray(roomCollection) && roomCollection.length > 0 ? (
             roomCollection.map((room) => (
-              <HomeCard key={room._id} room={room} uid={uid} token={token}  />
+              <HomeCard key={room._id} room={room} uid={uid} token={token} navigation={navigation} />
             ))
           ) : (
             <></>

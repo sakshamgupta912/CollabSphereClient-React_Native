@@ -28,7 +28,7 @@ export default function InRoomScreen(props) {
   const roomCode = props.route.params.roomCode
   const roomId = props.route.params.roomId
 
-  const navigation = useNavigation()
+  const navigation2 = props.route.params.navigation 
   const insets = useSafeAreaInsets()
 
   return (
@@ -45,7 +45,7 @@ export default function InRoomScreen(props) {
       <View style={styles.container}>
         {/* Wrap TouchableOpacity with a View to provide a larger touchable area */}
         <View style={styles.backContainer}>
-          <TouchableOpacity onPress={() => navigation.goBack()}>
+          <TouchableOpacity onPress={() => navigation2.goBack()}>
             <Image
               style={styles.image}
               source={require('../assets/arrow_back.png')}

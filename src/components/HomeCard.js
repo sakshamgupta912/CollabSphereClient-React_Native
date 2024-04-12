@@ -3,10 +3,11 @@ import { View, Image, StyleSheet } from 'react-native';
 import { Card, Title, Subheading, TouchableRipple } from 'react-native-paper'; // Import Title, Subheading, and TouchableRipple from react-native-paper
 import { useNavigation } from '@react-navigation/native';
 
-const HomeCard = ({ room, uid, token }) => {
-  const navigation = useNavigation();
+const HomeCard = ({ room, uid, token, navigation }) => {
+  
+  
   const onPress = () => {
-    navigation.navigate('InRoomScreen', { roomId: room._id, roomCode: room.code, uid: uid, token: token });
+    navigation.navigate('InRoomScreen', { roomId: room._id, roomCode: room.code, uid: uid, token: token, navigation: navigation });
   }
   return (
     <View>

@@ -6,7 +6,7 @@ import { theme } from './src/core/theme'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import AnnouncementScreen from './src/screens/InRoomScreens/AnnouncementScreen'
 
-
+import HomeCard from './src/components/HomeCard'
 import {
   StartScreen,
   LoginScreen,
@@ -15,7 +15,7 @@ import {
   Dashboard,
   InRoomScreen
 } from './src/screens'
-
+import HomeScreen from './src/screens/DashboardScreens/HomeScreen'
 const Stack = createStackNavigator()
 
 export default function App() {
@@ -33,9 +33,14 @@ export default function App() {
             <Stack.Screen name="LoginScreen" component={LoginScreen} />
             <Stack.Screen name="RegisterScreen" component={RegisterScreen} />
             <Stack.Screen name="Dashboard" component={Dashboard} />
+            <Stack.Screen name="HomeCard" component={HomeCard} />
             <Stack.Screen
               name="AnnouncementScreen"
               component={AnnouncementScreen}
+            />
+            <Stack.Screen
+              name="HomeScreen"
+              component={HomeScreen}
             />
             <Stack.Screen
               name="InRoomScreen"
