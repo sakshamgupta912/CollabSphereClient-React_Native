@@ -35,7 +35,6 @@
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "react-native": "^0.73.6",
-    "react-native-appearance": "^0.3.4",
     "react-native-blob-util": "^0.19.8",
     "react-native-bottom-sheet": "^1.0.3",
     "react-native-document-picker": "^9.1.1",
