@@ -7,6 +7,9 @@ import TextInput from '../../components/TextInput'
 import Button from '../../components/Button'
 import Icon from 'react-native-ico-material-design'
 import DateTimePickerModal from 'react-native-modal-datetime-picker'
+
+import MemberCard from '../../components/MemberCard'
+import SwitchSelector from 'react-native-switch-selector'
 import {
   View,
   Text,
@@ -25,6 +28,7 @@ import theme from '../../core/theme'
 import * as DocumentPicker from 'expo-document-picker'
 import nanoid from '../../helpers/nanoid'
 import axios from '../../api/axios'
+import { ScrollView } from 'react-native-gesture-handler'
 
 const AssignmentScreen = (props) => {
   const uid = props.route.params.uid
@@ -92,7 +96,6 @@ const AssignmentScreen = (props) => {
     })
 
     const handleConfirmTime = (date) => {
-      
       const time = new Date(date).getTime()
       setAssignmentTime((prev) => ({
         ...prev,
@@ -110,7 +113,6 @@ const AssignmentScreen = (props) => {
           multiple: true,
         })
         setFile(docRes)
-        
       } catch (error) {
         Alert.alert('Error while selecting file: ', error)
       }
@@ -319,7 +321,10 @@ const AssignmentScreen = (props) => {
   const BottomSheetContent = () => {
     const [bottomSheetData, setBottomSheetData] = useState(null)
     const [selectedFile, setSelectedFile] = useState(null)
-
+    const [submittedBy, setSubmittedBy] = useState([])
+    const [notSubmittedBy, setNotSubmittedBy] = useState([])
+    const [showSubmitted,setShowSubmitted]=useState(true)
+    const [showNotSubmitted,setShowNotSubmitted]=useState(false)
     async function getAssignmentContent() {
       try {
         const response = await axios.post(
@@ -337,6 +342,14 @@ const AssignmentScreen = (props) => {
         )
 
         setBottomSheetData(response.data.assignment)
+        
+        
+        
+       setSubmittedBy((prev)=>response.data.assignment.submittedBy)
+       setNotSubmittedBy((prev)=>response.data.assignment.notSubmittedBy)
+
+
+      
         if (response.data.assignment.submitted) {
           setButtonText('Un-Submit')
         } else {
@@ -356,9 +369,9 @@ const AssignmentScreen = (props) => {
         Alert.alert('Error selecting file:', error)
       }
     }
-    
+
     const [buttonText, setButtonText] = useState('Submit')
-    
+
     // Function to handle file submission
     const submitFile = async () => {
       if (buttonText === 'Submit') {
@@ -468,6 +481,12 @@ const AssignmentScreen = (props) => {
             {selectedFile?.assets[0]?.name}
           </Text>
         )}
+        <View
+          style={{
+            borderBottomWidth: 0.5,
+            borderBottomColor: theme.colors.secondary,
+          }}
+        ></View>
         {!isAdmin && (
           <View>
             {buttonText === 'Submit' && (
@@ -492,7 +511,43 @@ const AssignmentScreen = (props) => {
           </View>
         )}
 
-        <View style={styles.actions}></View>
+         {isAdmin && (
+          <SwitchSelector
+            style={{ marginTop: 10 }}
+            initial={0}
+            onPress={(value) => {
+              if (value === 'submitted') {
+                setShowSubmitted(true)
+                setShowNotSubmitted(false)
+              } else {
+                setShowSubmitted(false)
+                setShowNotSubmitted(true)
+              }
+            }}
+            textColor="grey" //  {theme.colors.secondary}
+            selectedColor="white"
+            buttonColor={theme.colors.primary}
+            borderColor={theme.colors.primary}
+            hasPadding
+            options={[
+              { label: 'Submitted', value: 'submitted' },
+              { label: 'Not Submitted', value: 'notsubmiited' },
+            ]}
+          />
+        )} 
+        <ScrollView style={{height:'70%'}}>
+          {(isAdmin && showSubmitted) &&
+            submittedBy.map((student) => (
+
+              
+              <MemberCard key={student._id} name={student.name} email={student.email} />
+              
+            ))}
+          {showNotSubmitted &&
+            notSubmittedBy.map((student) => (
+              <MemberCard key={student._id} name={student.name} email={student.email} />
+            ))}
+        </ScrollView> 
       </View>
     )
   }
@@ -590,7 +645,7 @@ const AssignmentScreen = (props) => {
         }}
         ref={ShowAssignmentSheetModalRef}
         index={0}
-        snapPoints={['70%']}
+        snapPoints={['95%']}
       >
         {selectedAssignment && (
           <View>
@@ -640,14 +695,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 10,
   },
-  searchInput: {
-    height: 40,
-    borderWidth: 2,
-    borderRadius: 5,
-    borderColor: '#A9A9A9',
-    marginBottom: 10,
-    paddingHorizontal: 10,
-  },
+
   card: {
     marginBottom: 20,
     padding: 10,
@@ -740,7 +788,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 5,
     marginBottom: 20,
-    borderBottomWidth: 0.5,
+    // borderBottomWidth: 0.5,
     borderBottomColor: '#808080',
     padding: 10,
   },
