@@ -144,7 +144,7 @@ const HomeScreen = () => {
             error: 'Code should not contain spaces!',
           }))
         } else {
-          const response = await axios.post(
+          const response = await axios.put(
             '/api/teams/joinTeam',
             JSON.stringify({ code: enterRoomName.value }),
             {

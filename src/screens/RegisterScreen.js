@@ -63,9 +63,10 @@ export default function RegisterScreen({ navigation }) {
           validateStatus: () => true,
         }
       );
-      console.log(response.status);
       // Handle response based on status
-      if (response.status === 200) {
+      if(response.data.code === 404){
+        Alert.alert('Error', 'Registration failed. User Already Exists!')
+      }else if (response.status === 200) {
         // Registration successful
         Alert.alert('Success','Registation Success')
         navigation.navigate('LoginScreen')
