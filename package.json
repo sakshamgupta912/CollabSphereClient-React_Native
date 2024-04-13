@@ -52,6 +52,7 @@
     "react-native-status-bar-height": "^2.6.0",
     "react-native-svg": "14.1.0",
     "react-native-switch-selector": "^2.3.0",
+    "react-native-viewpager": "^0.2.13",
     "react-native-web": "~0.19.6",
     "rn-fetch-blob": "^0.12.0"
   },
