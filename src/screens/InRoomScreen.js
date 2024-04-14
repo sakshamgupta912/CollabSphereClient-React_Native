@@ -102,7 +102,7 @@ export default function InRoomScreen(props) {
             tabBarLabel: '', // Hide the label
           }}
         />
-        <Tab.Screen
+        {/* <Tab.Screen
           name="Files"
           component={FileScreen}
           initialParams={{
@@ -121,7 +121,7 @@ export default function InRoomScreen(props) {
             ),
             tabBarLabel: '', // Hide the label
           }}
-        />
+        />   */}
         <Tab.Screen
           name="Members"
           component={MembersScreen}

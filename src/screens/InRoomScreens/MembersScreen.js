@@ -12,6 +12,8 @@ import {
   TextInput,
 } from 'react-native'
 
+
+
 import { useRoute } from '@react-navigation/native'
 import MemberCard from '../../components/MemberCard'
 import axios from '../../api/axios'
@@ -24,7 +26,12 @@ import {
   BottomSheetModalProvider,
 } from '@gorhom/bottom-sheet'
 
+
 const MembersScreen = (props) => {
+  const [visible, setVisible] = React.useState(false)
+  const showDialog = () => setVisible(true)
+  const hideDialog = () => setVisible(false)
+
   const uid = props.route.params.uid
   const token = props.route.params.token
   const roomCode = props.route.params.roomCode
@@ -33,8 +40,6 @@ const MembersScreen = (props) => {
   const [RoomLeadersContent, setRoomLeadersContent] = useState([])
   const [RoomMembersContent, setRoomMembersContent] = useState([])
   const [isAdmin, setIsAdmin] = useState(false)
-
-  
 
   const [usersList, setUsersList] = useState(null)
   const [searchUsers, setSearchUsers] = useState('')
@@ -45,7 +50,7 @@ const MembersScreen = (props) => {
     CreateMembersSheetModalRef.current?.present()
   }
   const closeCreateMembersSheet = () => {
-    getMembers();
+    getMembers()
     CreateMembersSheetModalRef.current?.close()
   }
   function removeDuplicates(arr) {
@@ -95,7 +100,7 @@ const MembersScreen = (props) => {
 
   const [flag, setFlag] = useState(0)
   const [contacts, setContacts] = useState([
-    {name: 'Loading...', email: 'Loading...', avatar: 'Loading...', }
+    { name: 'Loading...', email: 'Loading...', avatar: 'Loading...' },
   ])
 
   async function getUsers() {
@@ -160,7 +165,7 @@ const MembersScreen = (props) => {
                   }
                 )
                 if (response.status === 200) {
-                  closeCreateMembersSheet();
+                  closeCreateMembersSheet()
                 }
               }}
             >
@@ -183,21 +188,42 @@ const MembersScreen = (props) => {
         <View style={styles.containerMember}>
           <Text style={styles.textStyle}>Leaders</Text>
           {RoomLeadersContent.map((student) => (
-            <MemberCard
+            <TouchableOpacity
+              onPress={() => {
+                Alert.alert('Delete User', 'You cannot remove a leader')
+              }}
               key={student._id}
-              name={student.name}
-              email={student.email}
-            />
+            >
+              <MemberCard
+                key={student._id}
+                name={student.name}
+                email={student.email}
+              />
+            </TouchableOpacity>
           ))}
         </View>
         <View style={styles.containerMember}>
           <Text style={styles.textStyle}>Members</Text>
           {RoomMembersContent.map((student) => (
-            <MemberCard
+            <TouchableOpacity
               key={student._id}
-              name={student.name}
-              email={student.email}
-            />
+              onPress={() => {
+                Alert.alert(`Delete User`, `Do you want to delete ${student.name}`, [
+                  {
+                    text: 'Cancel',
+                    onPress: () => console.log('Cancel Pressed'),
+                    style: 'cancel',
+                  },
+                  { text: 'Yes', onPress: () => console.log('User Deleted') },
+                ])
+              }}
+            >
+              <MemberCard
+                key={student._id}
+                name={student.name}
+                email={student.email}
+              />
+            </TouchableOpacity>
           ))}
         </View>
       </ScrollView>

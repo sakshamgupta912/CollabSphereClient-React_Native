@@ -67,16 +67,17 @@ const AnnouncementScreen = (props) => {
             error: 'Message should not be empty!',
           }))
         } else {
+          const formData = new FormData();
+          formData.append('teamID', roomId);
+          formData.append('content', annoucementMessage.value);
+          formData.append('files', selectedFiles);
           console.log('InsideFile:', selectedFiles)
           const response = await axios.post(
             '/api/post/createPost',
-            {
-              teamID: roomId,
-              content: annoucementMessage.value,
-              files: selectedFiles,
-            },
+            formData,
             {
               headers: {
+                'Content-Type': 'multipart/form-data',
                 authorization: `Token ${token}`,
                 uid: uid,
                 uploadid: nanoid(),

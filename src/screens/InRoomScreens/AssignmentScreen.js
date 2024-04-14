@@ -169,19 +169,20 @@ const AssignmentScreen = (props) => {
 
           // Combine date and time
           const dueDate = `${formattedDate}T${formattedTime}.000Z`
-
+          
+          const formData = new FormData();
+          formData.append('teamID', roomId);
+          formData.append('title', assignmentTitle.value);
+          formData.append('description', annoucementDesc.value);
+          formData.append('dueDate', dueDate);
+          formData.append('grade', assignmentNumber.value);
+          formData.append('files', selectedFiles);
           const response = await axios.post(
             '/api/assignment/createAssignment',
-            {
-              teamID: roomId,
-              title: assignmentTitle.value,
-              description: annoucementDesc.value,
-              dueDate: dueDate,
-              grade: assignmentNumber.value,
-            },
+            formData,
             {
               headers: {
-                'Content-Type': 'application/json',
+                'Content-Type': 'multipart/form-data',
                 uid: uid,
                 authorization: `Token ${token}`,
                 uploadid: nanoid(),

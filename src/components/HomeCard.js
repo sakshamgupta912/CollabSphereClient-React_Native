@@ -3,11 +3,41 @@ import { View, Image, StyleSheet } from 'react-native';
 import { Card, Title, Subheading, TouchableRipple } from 'react-native-paper'; // Import Title, Subheading, and TouchableRipple from react-native-paper
 import { useNavigation } from '@react-navigation/native';
 
+
 const HomeCard = ({ room, uid, token }) => {
   const navigation = useNavigation();
+  const [imagePath, setImagePath] = React.useState(require('../assets/Others.jpg')); // [1
+ 
   const onPress = () => {
     navigation.navigate('InRoomScreen', { roomId: room._id, roomCode: room.code, uid: uid, token: token });
   }
+ 
+  React.useEffect(() => {
+    if (room.name === 'Node') {
+      setImagePath(require('../assets/Node.jpg'));
+    }
+    else if (room.name === 'React') {
+      setImagePath(require('../assets/React.jpg'));
+    }
+    else if (room.name === 'Maths')
+    {
+      setImagePath(require('../assets/Maths.jpg'));
+    }
+    else if (room.name === 'English')
+    {
+      setImagePath(require('../assets/English.jpg'));
+    }
+    else if (room.name === 'History')
+    {
+      setImagePath(require('../assets/History.jpg'));
+    }
+    else{
+      setImagePath(require('../assets/Others.jpg'));
+    }
+  }, [room.name]);
+
+  
+  
   return (
     <View>
       <TouchableRipple
@@ -17,7 +47,7 @@ const HomeCard = ({ room, uid, token }) => {
         borderless={true}
       >
         <Card style={styles.card}>
-          <Image source={{ uri: 'https://t4.ftcdn.net/jpg/03/16/39/05/360_F_316390528_pdGvI0V4C7eIamSYifI0Faj9dp9XEoLu.jpg' }} style={styles.image} />
+          <Image source={imagePath} style={styles.image} />
           <Card.Content>
             <Title>{room.name}</Title>
             <Subheading>{room.createdBy.name}</Subheading>
@@ -38,7 +68,7 @@ const styles = StyleSheet.create({
   image: {
     borderRadius: 5,
     height: 100, // Adjust the height as needed
-  },
+    resizeMode: 'cover' },
   touchable: {
     marginHorizontal:10,
     marginVertical:5,

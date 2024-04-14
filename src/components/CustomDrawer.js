@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { View, StyleSheet } from 'react-native'
 import { createDrawerNavigator, DrawerItemList } from '@react-navigation/drawer'
 import {
@@ -19,6 +19,29 @@ import AsyncStorage from '@react-native-async-storage/async-storage' // Import A
 import theme from '../core/theme'
 
 export const CustomDrawer = ({ mainNavigation, ...props }) => {
+
+  const [token, setToken] = useState()
+  const [uid, setUID] = useState()
+  const [name,setName]=useState()
+  const [avatar,setAvatar]=useState()
+
+  async function auth() {
+    try {
+      const t = await AsyncStorage.getItem('token')
+      const u = await AsyncStorage.getItem('uid')
+      const n = await AsyncStorage.getItem('name')
+      const a = await AsyncStorage.getItem('avatar')
+      setAvatar(a)
+      setName(n)
+      setToken(t)
+      setUID(u)
+    } catch (e) {
+      console.log('Auth function error: ' + e)
+    }
+  }
+  useEffect(() => {
+    auth()
+  }, [])
   const logout = async () => {
     try {
       // Remove user data from AsyncStorage
@@ -47,11 +70,11 @@ export const CustomDrawer = ({ mainNavigation, ...props }) => {
         <View style={styles.userInfoSection}>
           <Avatar.Image
             source={{
-              uri: 'https://pbs.twimg.com/profile_images/952545910990495744/b59hSXUd_400x400.jpg',
+              uri: avatar,
             }}
             size={50}
           />
-          <Title style={styles.title}>Dawid Urbaniak</Title>
+          <Title style={styles.title}>{name}</Title>
         </View>
         <PaperDrawer.Section style={styles.drawerSection}>
           <DrawerItemList
