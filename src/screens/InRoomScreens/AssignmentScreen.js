@@ -408,6 +408,7 @@ const AssignmentScreen = (props) => {
         try {
           const response = await axios.put(
             '/api/assignment/unSubmitAssignment',
+            {},
             {
               headers: {
                 authorization: `Token ${token}`,

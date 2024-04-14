@@ -150,7 +150,7 @@ const MembersScreen = (props) => {
               key={item._id}
               onPress={async () => {
                 console.log(item._id)
-                const response = await axios.post(
+                const response = await axios.put(
                   '/api/teams/addMember',
                   JSON.stringify({
                     member: [item._id],
@@ -214,7 +214,25 @@ const MembersScreen = (props) => {
                     onPress: () => console.log('Cancel Pressed'),
                     style: 'cancel',
                   },
-                  { text: 'Yes', onPress: () => console.log('User Deleted') },
+                  { text: 'Yes', onPress:async () => {
+                    const response = await axios.delete(
+                  '/api/teams/removeMember',
+                 
+                  {
+                    headers: {
+                      'Content-Type': 'application/json',
+                      authorization: `Token ${token}`,
+                      uid: uid,
+                      teamid: roomId,
+                      member: student._id
+                    },
+                  }
+                )
+                if (response.status === 200) {
+                  getMembers()
+                }
+
+                  } },
                 ])
               }}
             >

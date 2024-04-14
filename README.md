@@ -15,9 +15,7 @@ npm start
 
 ```
 
-## Usage
 
-Add usage instructions here.
 
 ## Contributing
 
