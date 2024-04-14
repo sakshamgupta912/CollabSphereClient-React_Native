@@ -8,6 +8,7 @@ import theme from '../core/theme'
 import * as MediaLibrary from 'expo-media-library'
 import * as FileSystem from 'expo-file-system'
 import * as Permissions from 'expo-permissions'
+import {baseURL} from '../api/axios'
 
 const AnnoucementCard = ({ post, uid, token, isAdmin, setUpdate }) => {
   const [deleteEnable, setDeleteEnable] = useState(false)
@@ -93,8 +94,7 @@ const AnnoucementCard = ({ post, uid, token, isAdmin, setUpdate }) => {
       //   }
       // }
       // Construct the download URL
-      const downloadUrl = 'http://192.168.1.3:3000/api/download'
-
+      const downloadUrl = baseURL+'/api/download'
       // Construct the headers with fileId
       const headers = {
         fileid: file._id,

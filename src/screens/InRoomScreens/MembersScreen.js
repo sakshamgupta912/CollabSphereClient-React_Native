@@ -33,10 +33,11 @@ const MembersScreen = (props) => {
   const [RoomLeadersContent, setRoomLeadersContent] = useState([])
   const [RoomMembersContent, setRoomMembersContent] = useState([])
   const [isAdmin, setIsAdmin] = useState(false)
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [usersList, setUsersList] = useState([])
+
+  
+
+  const [usersList, setUsersList] = useState(null)
   const [searchUsers, setSearchUsers] = useState('')
-  const [update, setUpdate] = useState(0)
 
   const CreateMembersSheetModalRef = useRef(null)
   const snapPoints = ['48%']
@@ -44,9 +45,22 @@ const MembersScreen = (props) => {
     CreateMembersSheetModalRef.current?.present()
   }
   const closeCreateMembersSheet = () => {
+    getMembers();
     CreateMembersSheetModalRef.current?.close()
   }
+  function removeDuplicates(arr) {
+    const uniqueArray = []
+    const map = new Map()
 
+    for (const item of arr) {
+      if (!map.has(item._id)) {
+        map.set(item._id, true)
+        uniqueArray.push(item)
+      }
+    }
+
+    return uniqueArray
+  }
   async function getMembers() {
     try {
       const response = await axios.post(
@@ -63,10 +77,12 @@ const MembersScreen = (props) => {
       )
 
       if (response.status === 200) {
-        console.log(response.data)
         setIsAdmin(response.data.isAdmin)
-        setRoomLeadersContent(response.data.teamMembers.admin)
-        setRoomMembersContent(response.data.teamMembers.members)
+
+        setRoomLeadersContent(removeDuplicates(response.data.teamMembers.admin))
+        setRoomMembersContent(
+          removeDuplicates(response.data.teamMembers.members)
+        )
       }
     } catch (error) {
       Alert.alert('Error', 'Failed to get team members' + error)
@@ -75,53 +91,33 @@ const MembersScreen = (props) => {
 
   useEffect(() => {
     getMembers()
-  }, [update])
+  }, [])
 
+  const [flag, setFlag] = useState(0)
+  const [contacts, setContacts] = useState([
+    {name: 'Loading...', email: 'Loading...', avatar: 'Loading...', }
+  ])
+
+  async function getUsers() {
+    const response = await axios.get('/api/auth/searchUsers', {
+      headers: {
+        'Content-Type': 'application/json',
+        authorization: `Token ${token}`,
+      },
+    })
+    if (flag == 0) {
+      setFlag(1)
+      if (response.status === 200) {
+        setContacts(removeDuplicates(response.data))
+        return
+      }
+    }
+  }
+
+  useEffect(() => {
+    getUsers()
+  }, [])
   const AddMemberSheet = () => {
-    const [contacts, setContacts] = useState([
-      {
-        id: 1,
-        name: 'John Doe',
-        phone: '555-555-5555',
-        image: 'https://www.bootdey.com/img/Content/avatar/avatar1.png',
-      },
-      {
-        id: 2,
-        name: 'Jane Smith',
-        phone: '444-444-4444',
-        image: 'https://www.bootdey.com/img/Content/avatar/avatar2.png',
-      },
-      {
-        id: 3,
-        name: 'Bobbie Doeman',
-        phone: '333-333-3333',
-        image: 'https://www.bootdey.com/img/Content/avatar/avatar3.png',
-      },
-      {
-        id: 4,
-        name: 'Cabnth Johnson',
-        phone: '333-333-3333',
-        image: 'https://www.bootdey.com/img/Content/avatar/avatar4.png',
-      },
-      {
-        id: 5,
-        name: 'Krekvh Martin',
-        phone: '333-333-3333',
-        image: 'https://www.bootdey.com/img/Content/avatar/avatar5.png',
-      },
-      {
-        id: 6,
-        name: 'Jose Cassti',
-        phone: '333-333-3333',
-        image: 'https://www.bootdey.com/img/Content/avatar/avatar6.png',
-      },
-      {
-        id: 7,
-        name: 'John Mrtiuhg',
-        email: '333-333-3333',
-        image: 'https://www.bootdey.com/img/Content/avatar/avatar7.png',
-      },
-    ])
     const [searchText, setSearchText] = useState('')
     const [filteredContacts, setFilteredContacts] = useState(contacts)
 
@@ -145,13 +141,37 @@ const MembersScreen = (props) => {
         </View>
         <ScrollView>
           {filteredContacts.map((item) => (
-            <View style={styles.itemContainer} key={item.id}>
-              <Image style={styles.image} source={{ uri: item.image }} />
-              <View style={styles.textContainer}>
-                <Text style={styles.nameText}>{item.name}</Text>
-                <Text style={styles.emailText}>{item.phone}</Text>
+            <TouchableOpacity
+              key={item._id}
+              onPress={async () => {
+                console.log(item._id)
+                const response = await axios.post(
+                  '/api/teams/addMember',
+                  JSON.stringify({
+                    member: [item._id],
+                    teamID: roomId,
+                  }),
+                  {
+                    headers: {
+                      'Content-Type': 'application/json',
+                      authorization: `Token ${token}`,
+                      uid: uid,
+                    },
+                  }
+                )
+                if (response.status === 200) {
+                  closeCreateMembersSheet();
+                }
+              }}
+            >
+              <View style={styles.itemContainer}>
+                <Image style={styles.avatar} source={{ uri: item.avatar }} />
+                <View style={styles.textContainer}>
+                  <Text style={styles.nameText}>{item.name}</Text>
+                  <Text style={styles.emailText}>{item.email}</Text>
+                </View>
               </View>
-            </View>
+            </TouchableOpacity>
           ))}
         </ScrollView>
       </View>
@@ -258,7 +278,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
   },
-  image: {
+  avatar: {
     width: 48,
     height: 48,
     borderRadius: 24,
@@ -270,7 +290,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
-  phoneText: {
+  emailText: {
     fontSize: 16,
     color: '#999',
   },
