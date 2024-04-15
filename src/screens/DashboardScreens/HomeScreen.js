@@ -1,5 +1,6 @@
 import React from 'react'
 import { useState, useEffect, useRef } from 'react'
+import { Alert } from 'react-native'
 import { View, StyleSheet, TouchableOpacity, Text } from 'react-native'
 import Icon from 'react-native-ico-material-design'
 import HomeCard from '../../components/HomeCard'
@@ -213,7 +214,7 @@ const HomeScreen = () => {
       setToken(t)
       setUID(u)
     } catch (e) {
-      console.log('Auth function error: ' + e)
+      Alert.alert('Auth function error: ' + e)
     }
   }
 
@@ -236,7 +237,7 @@ const HomeScreen = () => {
       if (response.status === 200) {
         setRoomCollection(response.data)
       } else {
-        console.error('Error fetching room data:', response.statusText)
+        Alert.alert('Error fetching room data:', response.statusText)
       }
     } catch (error) {
       console.error('Error fetching room data:', error)

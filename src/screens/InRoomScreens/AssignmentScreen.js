@@ -30,6 +30,8 @@ import nanoid from '../../helpers/nanoid'
 import axios from '../../api/axios'
 import { ScrollView } from 'react-native-gesture-handler'
 
+
+
 const AssignmentScreen = (props) => {
   const uid = props.route.params.uid
   const token = props.route.params.token
@@ -144,10 +146,6 @@ const AssignmentScreen = (props) => {
           && assignmentDate.getMonth() === new Date().getMonth()
         ) {
 
-          console.log("assignmentTime" +assignmentTime.value )
-          console.log("assignmentDate"+ new Date().getTime())
-          console.log("assignmentDate.getDate()"+ assignmentDate)
-          console.log("new Date().getDate()", new Date())
           setAssignmentTime((prev) => ({
             ...prev,
             error: 'Time can not be in the past!',
@@ -348,15 +346,13 @@ const AssignmentScreen = (props) => {
           }
         )
 
-        setBottomSheetData(response.data.assignment)
-        
-        
-        
-       setSubmittedBy((prev)=>response.data.assignment.submittedBy)
-       setNotSubmittedBy((prev)=>response.data.assignment.notSubmittedBy)
-
-
-      
+        if (response.status === 200) {
+          setBottomSheetData(response.data.assignment)
+          setSubmittedBy((prev)=>response.data.assignment.submittedBy)
+          setNotSubmittedBy((prev)=>response.data.assignment.notSubmittedBy)
+   
+        }
+       
         if (response.data.assignment.submitted) {
           setButtonText('Un-Submit')
         } else {
@@ -635,6 +631,7 @@ const AssignmentScreen = (props) => {
 
   return (
     <BottomSheetModalProvider>
+    
       <View style={styles.container}>
         {}
         <FlatList
@@ -686,7 +683,9 @@ const AssignmentScreen = (props) => {
           </View>
         </BottomSheetModal>
       )}
+     
     </BottomSheetModalProvider>
+    
   )
 }
 
