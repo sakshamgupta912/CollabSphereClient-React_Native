@@ -36,6 +36,8 @@ const AssignmentScreen = () => {
   useEffect(() => {
     auth()
   }, [])
+
+  console.log('Token: ' + token)
   return (
     <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
       <Text>Assignment Screen</Text>

@@ -140,8 +140,14 @@ const AssignmentScreen = (props) => {
         }
         if (
           assignmentTime.value < new Date().getTime() &&
-          assignmentDate.getDate() === new Date().getDate()
+          assignmentDate.getDate() === new Date().getDate() 
+          && assignmentDate.getMonth() === new Date().getMonth()
         ) {
+
+          console.log("assignmentTime" +assignmentTime.value )
+          console.log("assignmentDate"+ new Date().getTime())
+          console.log("assignmentDate.getDate()"+ assignmentDate)
+          console.log("new Date().getDate()", new Date())
           setAssignmentTime((prev) => ({
             ...prev,
             error: 'Time can not be in the past!',
