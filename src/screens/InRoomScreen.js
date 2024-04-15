@@ -37,8 +37,8 @@ export default function InRoomScreen(props) {
     <View
       style={{
         flex: 1,
-        paddingTop:
-          Platform.OS === 'android' ? StatusBar.currentHeight : insets.top,
+        // paddingTop:
+        //   Platform.OS === 'android' ? StatusBar.currentHeight : insets.top,
       }}
     >
       
