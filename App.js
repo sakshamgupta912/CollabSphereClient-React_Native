@@ -5,7 +5,7 @@ import { createStackNavigator } from '@react-navigation/stack'
 import { theme } from './src/core/theme'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import AnnouncementScreen from './src/screens/InRoomScreens/AnnouncementScreen'
-
+import { SharedStateProvider } from './src/core/SharedStateContext'
 
 import {
   StartScreen,
@@ -20,6 +20,7 @@ const Stack = createStackNavigator()
 
 export default function App() {
   return (
+    <SharedStateProvider>
     <GestureHandlerRootView style={{ flex: 1 }}>
       <Provider theme={theme}>
         <NavigationContainer>
@@ -49,5 +50,6 @@ export default function App() {
         </NavigationContainer>
       </Provider>
     </GestureHandlerRootView>
+    </SharedStateProvider>
   )
 }

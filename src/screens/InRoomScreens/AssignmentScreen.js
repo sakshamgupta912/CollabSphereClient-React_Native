@@ -29,10 +29,12 @@ import * as DocumentPicker from 'expo-document-picker'
 import nanoid from '../../helpers/nanoid'
 import axios from '../../api/axios'
 import { ScrollView } from 'react-native-gesture-handler'
-
+import { useSharedState } from '../../core/SharedStateContext';
 
 
 const AssignmentScreen = (props) => {
+  const { state, updateState } = useSharedState();
+
   const uid = props.route.params.uid
   const token = props.route.params.token
   const roomCode = props.route.params.roomCode
@@ -195,6 +197,8 @@ const AssignmentScreen = (props) => {
           )
 
           if (response.status === 200) {
+            const { counter } = state;
+            updateState({ ...state, counter: counter + 1 })
             setUpdate((prev) => prev + 1)
             closeCreateAssignmentButton()
           }

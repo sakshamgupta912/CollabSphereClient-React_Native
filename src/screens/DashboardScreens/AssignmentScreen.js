@@ -19,10 +19,10 @@ import {
 } from '@gorhom/bottom-sheet'
 import Button from '../../components/Button'
 import { Alert } from 'react-native'
-
+import { useSharedState } from '../../core/SharedStateContext';
 
 const AssignmentScreen = () => {
-  
+  const { state, updateState } = useSharedState();
 
 
   const [token, setToken] = useState()
@@ -47,27 +47,32 @@ const AssignmentScreen = () => {
   }, [])
 
   async function getAnnouncements() {
-    const response = await axios.get('/api/assignment/assignments', {
-      headers: {
-        'Content-Type': 'application/json',
-        authorization: `Bearer ${token}`,
-        uid: uid,
-      },
-      withCredentials: true,
-    })
-
-    if (response.status === 200) {
-      console.log(response.data)
-
-      setAssignmentContent(response.data.assignments)
-      // cards = response.data.assignments.map(createAssignmentCard);
-      // setPageContent(response.data.assignments.map(createAssignmentCard));
+    try{
+      const response = await axios.get('/api/assignment/assignments', {
+        headers: {
+          'Content-Type': 'application/json',
+          authorization: `Bearer ${token}`,
+          uid: uid,
+        },
+        withCredentials: true,
+      })
+  
+      if (response.status === 200) {
+        setAssignmentContent(response.data.assignments)
+        // cards = response.data.assignments.map(createAssignmentCard);
+        // setPageContent(response.data.assignments.map(createAssignmentCard));
+      }
     }
+    catch(error)
+    {
+      Alert.alert('Error fetching all announcements:', error)
+    }
+    
   }
 
   useEffect(() => {
     getAnnouncements()
-  }, [update])
+  }, [update,state])
 
   // Bottom sheet content
   const ShowAssignmentSheetModalRef = useRef(null)
