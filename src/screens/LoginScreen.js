@@ -120,6 +120,7 @@ export default function LoginScreen({ navigation }) {
       />
       <TextInput
         label="Password"
+        autoCapitalize="none"
         returnKeyType="done"
         value={password.value}
         onChangeText={(text) => setPassword({ value: text, error: '' })}

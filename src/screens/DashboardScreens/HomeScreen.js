@@ -276,7 +276,10 @@ const HomeScreen = () => {
               <HomeCard key={room._id} room={room} uid={uid} token={token}  />
             ))
           ) : (
-            <></>
+            <>
+            <Text style={{textAlign:'center', color:theme.colors.secondary}}>Looks like theres no rooms in this organization</Text>
+            <Text style={{textAlign:'center'}}>Try Creating Rooms or Refresh</Text>
+            </>
           )}
         </ScrollView>
         {/* Floating button */}

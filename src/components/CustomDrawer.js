@@ -64,7 +64,6 @@ export const CustomDrawer = ({ mainNavigation, ...props }) => {
   
   return (
     <DrawerContentScrollView
-    contentContainerStyle={{ backgroundColor: theme.colors.pr }}
     >
       <View style={styles.drawerContent}>
         <View style={styles.userInfoSection}>
